@@ -48,3 +48,42 @@ export function timeAgo(iso: string): string {
 export function fullDateTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
+
+export const categoryLabel: Record<Schemas["ReportOut"]["category"], string> = {
+  electronics: "Electronics",
+  phone: "Phone",
+  bag: "Bag or luggage",
+  wallet: "Wallet or purse",
+  keys: "Keys",
+  documents: "Documents or cards",
+  clothing: "Clothing",
+  jewellery: "Jewellery or watch",
+  eyewear: "Glasses",
+  umbrella: "Umbrella",
+  toy: "Toy",
+  other: "Something else",
+};
+
+export const reportStatusLabel: Record<Schemas["ReportOut"]["status"], string> = {
+  draft: "Draft",
+  submitted: "Submitted",
+  processing: "Processing",
+  active: "Active",
+  resolved: "Resolved",
+  withdrawn: "Withdrawn",
+  expired: "Expired",
+  rejected: "Rejected",
+};
+
+/** "distinctive_marks" → "Distinctive marks". For attribute keys without a dedicated label. */
+export function humanizeKey(key: string): string {
+  const s = key.replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export const custodyLabel: Record<NonNullable<Schemas["ReportOut"]["custody_status"]>, string> = {
+  finder_holds: "The finder has it",
+  organisation_holds: "Held by the organisation",
+  transferred: "Handed to an organisation",
+  released: "Returned to owner",
+};

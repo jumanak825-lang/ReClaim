@@ -24,7 +24,7 @@ test("individual dashboard shows the user's own counts and activity", async ({ p
   await expect(card(page, "Potential matches")).toContainText("not confirmed ownership");
   const activity = page.getByRole("region", { name: "Recent activity" });
   await expect(activity.getByText("Claim submitted")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Report lost" })).toHaveAttribute("href", "/report/lost");
+  await expect(page.getByRole("main").getByRole("link", { name: "Report lost" })).toHaveAttribute("href", "/report/lost");
 });
 
 test("a brand-new user sees the first-report empty state", async ({ page }) => {

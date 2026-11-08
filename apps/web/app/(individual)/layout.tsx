@@ -5,7 +5,11 @@ import { AppHeader, type NavItem } from "@/components/app-header";
 import { LoadingState } from "@/components/states";
 
 // Items are added as their pages land (docs/02 §2.3).
-const nav: NavItem[] = [{ href: "/dashboard", label: "Dashboard" }];
+const nav: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/report/lost", label: "Report lost" },
+  { href: "/reports", label: "My reports" },
+];
 
 export default function IndividualLayout({ children }: LayoutProps<"/">) {
   return (
