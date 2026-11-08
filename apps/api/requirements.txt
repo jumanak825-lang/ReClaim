@@ -2,6 +2,10 @@ fastapi>=0.115,<1
 uvicorn[standard]>=0.32
 pydantic>=2.11,<3
 python-multipart>=0.0.18
-# dev / test
+sqlalchemy>=2.0.36,<3
+psycopg[binary]>=3.2
+alembic>=1.14
+argon2-cffi>=23.1
 httpx>=0.27
+# dev / test
 pytest>=8

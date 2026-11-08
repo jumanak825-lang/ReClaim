@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Reclaim API (stub)",
-    "description": "**STUB MODE**: in-memory data, seeded demo accounts, mocked PayPal, simulated courier, keyword-based extraction/matching. Data resets on restart or `POST /api/v1/dev/reset`. Response shapes are the contract for the real backend.",
-    "version": "0.1.0-stub"
+    "title": "Reclaim API",
+    "description": "Lost-and-found recovery network API (PostgreSQL). Simulated parts are labelled: PayPal orders are mocked until Day 3, the courier is simulated, and extraction falls back to keyword rules when no AI key is configured. `/api/v1/dev/*` needs ENABLE_DEV_ROUTES=true.",
+    "version": "0.2.0"
   },
   "paths": {
     "/api/v1/auth/register": {
@@ -11,7 +11,7 @@
         "tags": [
           "auth"
         ],
-        "summary": "Register",
+        "summary": "Create an account and sign in. Rate limited per IP.",
         "operationId": "register_api_v1_auth_register_post",
         "requestBody": {
           "content": {
@@ -93,6 +93,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -102,7 +112,7 @@
         "tags": [
           "auth"
         ],
-        "summary": "Login",
+        "summary": "Sign in. Rate limited per IP and per email.",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
@@ -184,6 +194,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -251,6 +271,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -337,6 +367,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -409,6 +449,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -490,6 +540,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -586,6 +646,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -660,6 +730,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -758,6 +838,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -842,6 +932,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1008,6 +1108,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -1094,6 +1204,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1202,6 +1322,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -1288,6 +1418,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1388,6 +1528,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -1481,6 +1631,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -1567,6 +1727,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1697,6 +1867,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -1810,6 +1990,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -1896,6 +2086,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1996,6 +2196,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -2082,6 +2292,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2185,6 +2405,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2305,6 +2535,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -2391,6 +2631,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2501,6 +2751,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -2597,6 +2857,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2707,6 +2977,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -2800,6 +3080,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -2886,6 +3176,119 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recoveries/{recovery_id}/collection/pickup-token": {
+      "post": {
+        "tags": [
+          "recoveries"
+        ],
+        "summary": "Claimant: reveal a one-time pickup code (rotates any previous code). The code is returned only in this response; the server stores just its hash.",
+        "operationId": "pickup_token_api_v1_recoveries__recovery_id__collection_pickup_token_post",
+        "parameters": [
+          {
+            "name": "recovery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Recovery Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_RecoveryOut_"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "State conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2996,6 +3399,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -3082,6 +3495,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3182,6 +3605,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -3268,6 +3701,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3378,6 +3821,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -3462,6 +3915,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3560,6 +4023,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -3569,8 +4042,20 @@
         "tags": [
           "payments"
         ],
-        "summary": "PayPal webhook (stub: accepted and ignored)",
+        "summary": "PayPal webhook. Signature verified with PayPal; duplicates are acknowledged and ignored.",
         "operationId": "webhook_api_v1_payments_paypal_webhook_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Event"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3634,6 +4119,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3727,6 +4222,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3847,6 +4352,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -3933,6 +4448,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4033,6 +4558,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -4119,6 +4654,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4413,6 +4958,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -4509,6 +5064,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4665,6 +5230,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -4811,6 +5386,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -4934,6 +5519,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5028,6 +5623,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5113,6 +5718,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5243,6 +5858,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5317,6 +5942,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5417,6 +6052,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5498,6 +6143,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5507,7 +6162,7 @@
         "tags": [
           "uploads"
         ],
-        "summary": "Upload an image (JPEG/PNG/WebP) or PDF evidence, max 8 MB; pass the id in image_ids",
+        "summary": "Upload an image (JPEG/PNG/WebP) or PDF evidence, max 8 MB; pass the id in image_ids. Rate limited per user.",
         "operationId": "upload_api_v1_uploads_post",
         "requestBody": {
           "content": {
@@ -5582,6 +6237,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5679,6 +6344,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5688,7 +6363,7 @@
         "tags": [
           "health"
         ],
-        "summary": "Health",
+        "summary": "Liveness: the process is up",
         "operationId": "health_api_v1_health_get",
         "responses": {
           "200": {
@@ -5760,6 +6435,107 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Readiness: database reachable and migrations applied (503 otherwise)",
+        "operationId": "ready_api_v1_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "State conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5769,7 +6545,7 @@
         "tags": [
           "dev"
         ],
-        "summary": "Wipe all data and reload the demo seed (signs everyone out)",
+        "summary": "Wipe ALL data and reload the demo seed (signs everyone out). Needs ENABLE_DEV_ROUTES=true",
         "operationId": "reset_api_v1_dev_reset_post",
         "responses": {
           "200": {
@@ -5841,6 +6617,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5850,7 +6636,7 @@
         "tags": [
           "dev"
         ],
-        "summary": "Demo Accounts",
+        "summary": "Demo logins. Needs ENABLE_DEV_ROUTES=true",
         "operationId": "demo_accounts_api_v1_dev_demo_accounts_get",
         "responses": {
           "200": {
@@ -5922,6 +6708,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -5931,7 +6727,7 @@
         "tags": [
           "dev"
         ],
-        "summary": "Move a dispatched delivery to in_transit now (otherwise automatic after ~20s)",
+        "summary": "Staff: move a dispatched delivery to in_transit now (otherwise automatic after ~20s). Needs ENABLE_DEV_ROUTES=true",
         "operationId": "advance_courier_api_v1_dev_recoveries__recovery_id__advance_courier_post",
         "parameters": [
           {
@@ -6008,6 +6804,16 @@
           },
           "422": {
             "description": "Semantic validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (see Retry-After header)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8283,7 +9089,7 @@
           },
           "mode": {
             "type": "string",
-            "const": "stub",
+            "const": "database",
             "title": "Mode"
           }
         },
@@ -9367,6 +10173,39 @@
         ],
         "title": "PlaceIn"
       },
+      "ReadyOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "not_ready"
+            ],
+            "title": "Status"
+          },
+          "database": {
+            "type": "boolean",
+            "title": "Database"
+          },
+          "migrations": {
+            "type": "string",
+            "enum": [
+              "current",
+              "pending",
+              "unknown"
+            ],
+            "title": "Migrations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "database",
+          "migrations"
+        ],
+        "title": "ReadyOut"
+      },
       "RecoveryCreate": {
         "properties": {
           "method": {
@@ -9552,7 +10391,7 @@
               }
             ],
             "title": "Pickup Token",
-            "description": "Claimant only, while ready_for_pickup and unexpired. Never show on a public page."
+            "description": "Only in the response to POST .../collection/pickup-token (claimant, ready_for_pickup). Null everywhere else: the server stores only a hash. Never show on a public page."
           },
           "pickup_token_expires_at": {
             "anyOf": [
@@ -9595,7 +10434,7 @@
             },
             "type": "array",
             "title": "Available Actions",
-            "description": "claimant: pay_with_paypal, confirm_received, cancel; staff: mark_ready_for_pickup, validate_pickup_token, dispatch, cancel"
+            "description": "claimant: pay_with_paypal, show_pickup_code, confirm_received, cancel; staff: mark_ready_for_pickup, validate_pickup_token, dispatch, cancel"
           },
           "created_at": {
             "type": "string",
@@ -10245,6 +11084,22 @@
           "received": {
             "type": "boolean",
             "title": "Received"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "processed",
+                  "duplicate",
+                  "ignored"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
           }
         },
         "additionalProperties": false,

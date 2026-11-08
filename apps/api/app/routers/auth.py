@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Request, Response
 
-from ..core.config import settings
+from ..core import config, ratelimit
 from ..core.envelope import Envelope, ok
 from ..core.errors import ApiError
-from ..deps import CurrentUser
+from ..db.models import Organisation, User
+from ..db.session import db
+from ..deps import CurrentUser, DbSession
 from ..schemas.auth import DashboardCounts, DashboardOut, LoginIn, MeOut, MeUpdate, MembershipOut, RegisterIn
-from ..stub import presenters as P, services as svc
-from ..stub.models import User
-from ..stub.store import db
+from ..services import presenters as P, svc
 
 router = APIRouter(tags=["auth"])
 
@@ -17,65 +17,74 @@ router = APIRouter(tags=["auth"])
 def _me(user: User) -> MeOut:
     ms = []
     for m in svc.memberships_of(user):
-        org = db.organisations[m.organisation_id]
+        org = db().get(Organisation, m.organisation_id)
         ms.append(MembershipOut(organisation_id=org.id, organisation_name=org.name, organisation_slug=org.slug,
-                                role=m.role, location_ids=m.location_ids))  # type: ignore[arg-type]
+                                role=m.role,  # type: ignore[arg-type]
+                                location_ids=svc.scoped_location_ids(user, org.id)))
     return MeOut(id=user.id, email=user.email, display_name=user.display_name, phone_e164=user.phone_e164,
                  created_at=user.created_at, is_staff=bool(ms), memberships=ms)
 
 
 def _set_cookie(response: Response, token: str) -> None:
-    response.set_cookie(settings.session_cookie_name, token, httponly=True, samesite="lax",
-                        secure=settings.cookie_secure, max_age=settings.session_ttl_hours * 3600, path="/")
+    s = config.settings
+    response.set_cookie(s.session_cookie_name, token, httponly=True, samesite="lax", secure=s.cookie_secure,
+                        max_age=s.session_ttl_hours * 3600, path="/")
 
 
-@router.post("/auth/register", response_model=Envelope[MeOut], status_code=201)
-async def register(body: RegisterIn, request: Request, response: Response):
+@router.post("/auth/register", response_model=Envelope[MeOut], status_code=201,
+             summary="Create an account and sign in. Rate limited per IP.")
+def register(body: RegisterIn, request: Request, response: Response, _db: DbSession):
+    ratelimit.hit("auth-ip", ratelimit.client_ip(request), config.settings.rate_limit_auth)
     user = svc.register(body.email, body.password, body.display_name)
     _set_cookie(response, svc.create_session(user))
     return ok(_me(user))
 
 
-@router.post("/auth/login", response_model=Envelope[MeOut])
-async def login(body: LoginIn, request: Request, response: Response):
+@router.post("/auth/login", response_model=Envelope[MeOut], summary="Sign in. Rate limited per IP and per email.")
+def login(body: LoginIn, request: Request, response: Response, _db: DbSession):
+    ratelimit.hit("auth-ip", ratelimit.client_ip(request), config.settings.rate_limit_auth)
+    ratelimit.hit("auth-email", body.email.strip().lower(), config.settings.rate_limit_auth)
     user = svc.login(body.email, body.password)
-    svc.end_session(request.cookies.get(settings.session_cookie_name))  # rotate on login
+    svc.end_session(request.cookies.get(config.settings.session_cookie_name))  # rotate on login
     _set_cookie(response, svc.create_session(user))
     return ok(_me(user))
 
 
 @router.post("/auth/logout", status_code=204)
-async def logout(request: Request, response: Response):
-    svc.end_session(request.cookies.get(settings.session_cookie_name))
-    response.delete_cookie(settings.session_cookie_name, path="/")
+def logout(request: Request, response: Response, _db: DbSession):
+    svc.end_session(request.cookies.get(config.settings.session_cookie_name))
+    response.delete_cookie(config.settings.session_cookie_name, path="/")
     response.status_code = 204
     return response
 
 
 @router.post("/auth/password/forgot", status_code=501)
-async def password_forgot():
+def password_forgot():
     raise ApiError(501, "NOT_AVAILABLE_IN_DEMO", "Password reset is not available in the demo.")
 
 
 @router.post("/auth/password/reset", status_code=501)
-async def password_reset():
+def password_reset():
     raise ApiError(501, "NOT_AVAILABLE_IN_DEMO", "Password reset is not available in the demo.")
 
 
 @router.get("/me", response_model=Envelope[MeOut])
-async def me(user: CurrentUser):
+def me(user: CurrentUser):
     return ok(_me(user))
 
 
 @router.patch("/me", response_model=Envelope[MeOut])
-async def update_me(body: MeUpdate, user: CurrentUser):
+def update_me(body: MeUpdate, user: CurrentUser):
     for k, v in body.model_dump(exclude_unset=True).items():
+        if k == "display_name" and v is None:
+            raise ApiError(400, "VALIDATION_ERROR", "Some fields are invalid.", {"fields": [
+                {"loc": ["body", "display_name"], "message": "display_name cannot be null", "type": "value_error"}]})
         setattr(user, k, v)
     return ok(_me(user))
 
 
 @router.get("/me/dashboard", response_model=Envelope[DashboardOut], summary="Individual dashboard cards + activity")
-async def dashboard(user: CurrentUser):
+def dashboard(user: CurrentUser):
     reports = svc.my_reports(user, None, None)
     claims = svc.my_claims(user)
     recs = [svc.recovery_for_claim(c) for c in claims]

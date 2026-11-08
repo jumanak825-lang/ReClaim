@@ -17,3 +17,6 @@ out/
 # misc
 .DS_Store
 *.log
+
+# api runtime files (local uploads)
+apps/api/var/

@@ -1,4 +1,4 @@
-"""Deterministic matcher used by the stub (no AI, no embeddings).
+"""Deterministic matcher (no embeddings for the hackathon).
 
 Follows docs/06 §6.5: weighted 0-1 features x 100, visual similarity
 weight redistributed (no image embeddings for the hackathon). Scores are
@@ -8,11 +8,11 @@ illustrative demo values, not validated thresholds.
 from __future__ import annotations
 
 import re
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
-from .models import Report
+from ..db.models import Report
 
-MATCHER_VERSION = "stub-0.1"
+MATCHER_VERSION = "rules-0.1"
 SURFACE_THRESHOLD = 65.0
 STRONG_THRESHOLD = 85.0
 
@@ -33,6 +33,11 @@ def _tokens(text: str) -> set[str]:
 def _public_text_tokens(r: Report) -> set[str]:
     parts = [r.item_label, r.description, r.brand or "", r.model or "", *r.attributes_public.values()]
     return _tokens(" ".join(parts))
+
+
+def _aware(dt: datetime | None) -> datetime | None:
+    """Treat naive timestamps as UTC so naive/aware comparisons can't crash scoring."""
+    return dt.replace(tzinfo=timezone.utc) if dt is not None and dt.tzinfo is None else dt
 
 
 def score_pair(lost: Report, found: Report, found_location_text: str) -> tuple[float, dict[str, float], list[str]]:
@@ -81,14 +86,15 @@ def score_pair(lost: Report, found: Report, found_location_text: str) -> tuple[f
         comps["location"] = 0.5
 
     # time
-    if found.found_at and (lost.lost_at_start or lost.lost_at_end):
-        start = lost.lost_at_start or lost.lost_at_end
-        end = (lost.lost_at_end or lost.lost_at_start) + timedelta(hours=72)  # type: ignore[operator]
-        if start - timedelta(hours=2) <= found.found_at <= end:  # type: ignore[operator]
+    found_at, lost_start, lost_end = _aware(found.found_at), _aware(lost.lost_at_start), _aware(lost.lost_at_end)
+    if found_at and (lost_start or lost_end):
+        start = lost_start or lost_end
+        end = (lost_end or lost_start) + timedelta(hours=72)  # type: ignore[operator]
+        if start - timedelta(hours=2) <= found_at <= end:  # type: ignore[operator]
             comps["time"] = 1.0
             why.append("The item was found within the reported time window.")
         else:
-            gap = min(abs((found.found_at - start).total_seconds()), abs((found.found_at - end).total_seconds()))
+            gap = min(abs((found_at - start).total_seconds()), abs((found_at - end).total_seconds()))
             comps["time"] = round(max(0.0, 1 - gap / (14 * 86400)), 3)
     else:
         comps["time"] = 0.5

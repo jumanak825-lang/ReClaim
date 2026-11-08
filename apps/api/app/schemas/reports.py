@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from .common import (
     Category,
@@ -92,6 +92,20 @@ class ReportUpdate(Model):
     attributes_public: Attrs | None = None
     attributes_private: Attrs | None = None
     image_ids: list[UUID] | None = Field(default=None, max_length=6)
+
+    @field_validator("category", "item_label", "description", "last_location")
+    @classmethod
+    def _not_null(cls, v, info):
+        # Omit a field to leave it unchanged. Explicit null is only allowed for optional fields.
+        if v is None:
+            raise ValueError(f"{info.field_name} cannot be null")
+        return v
+
+    @model_validator(mode="after")
+    def _window(self) -> "ReportUpdate":
+        if self.lost_at_start and self.lost_at_end and self.lost_at_end < self.lost_at_start:
+            raise ValueError("lost_at_end must be after lost_at_start")
+        return self
 
 
 ProcessingStatus = Literal["not_started", "processing", "completed", "failed"]

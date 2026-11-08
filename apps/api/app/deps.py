@@ -3,15 +3,21 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import Depends, Query, Request
+from sqlalchemy.orm import Session
 
-from .core.config import settings
+from .core import config
 from .core.errors import ApiError
-from .stub import services as svc
-from .stub.models import User
+from .db.models import User
+from .db.session import get_db
+from .services import svc
+
+# One session per request; committed before the response is sent (scope="function").
+DB = Depends(get_db, scope="function")
+DbSession = Annotated[Session, DB]
 
 
-async def current_user(request: Request) -> User:
-    user = svc.session_user(request.cookies.get(settings.session_cookie_name))
+def current_user(request: Request, _db: DbSession) -> User:
+    user = svc.session_user(request.cookies.get(config.settings.session_cookie_name))
     if not user:
         raise ApiError(401, "UNAUTHENTICATED", "Sign in to continue.")
     return user
