@@ -1,0 +1,153 @@
+{
+  "_comment": "Demo seed for the STUB API. Fictional organisations and people only; no real personal data. Times are relative to server start (hours ago). Frontend owns the content (docs/11 §3); backend owns the loader (app/stub/store.py). Hit POST /api/v1/dev/reset after editing.",
+  "password": "reclaim-demo",
+  "users": [
+    { "key": "owner", "email": "owner@reclaim.example", "display_name": "Dana Owner", "persona": "Individual who lost a laptop (main demo user)" },
+    { "key": "finder", "email": "finder@reclaim.example", "display_name": "Felix Finder", "persona": "Individual who found a wallet" },
+    { "key": "other", "email": "other@reclaim.example", "display_name": "Uma Unrelated", "persona": "Unrelated individual (for permission checks)" },
+    { "key": "hv_staff", "email": "staff@harbourview.example", "display_name": "Sam Staff", "persona": "Harbourview Airport staff (cannot approve claims)" },
+    { "key": "hv_reviewer", "email": "reviewer@harbourview.example", "display_name": "Riya Reviewer", "persona": "Harbourview Airport claim reviewer" },
+    { "key": "hv_manager", "email": "manager@harbourview.example", "display_name": "Max Manager", "persona": "Harbourview Airport manager (integrations, audit)" },
+    { "key": "gm_reviewer", "email": "reviewer@grandmeridian.example", "display_name": "Gia Reviewer", "persona": "Grand Meridian Hotel reviewer (other tenant)" },
+    { "key": "ng_manager", "email": "manager@northgate.example", "display_name": "Nia Manager", "persona": "Northgate Mall manager" }
+  ],
+  "organisations": [
+    {
+      "key": "harbourview", "name": "Harbourview International Airport", "slug": "harbourview-airport", "type": "airport",
+      "description": "Fictional demo airport.",
+      "locations": [
+        { "key": "hv_t1", "name": "Terminal 1 Lost Property", "timezone": "Asia/Dubai", "country_code": "AE", "address_public": "Terminal 1, Arrivals Level", "latitude": 25.2486, "longitude": 55.3519, "opening_hours": "Daily 08:00-20:00", "collection_instructions": "Bring photo ID and your pickup code to the Lost Property counter next to Arrivals Gate 3." },
+        { "key": "hv_t3", "name": "Terminal 3 Lost Property", "timezone": "Asia/Dubai", "country_code": "AE", "address_public": "Terminal 3, Departures Level", "latitude": 25.2532, "longitude": 55.3657, "opening_hours": "Daily 06:00-22:00", "collection_instructions": "Ask at the Customer Service desk opposite Check-in Row F." }
+      ]
+    },
+    {
+      "key": "grandmeridian", "name": "Grand Meridian Hotel", "slug": "grand-meridian-hotel", "type": "hotel",
+      "description": "Fictional demo hotel.",
+      "locations": [
+        { "key": "gm_front", "name": "Front Desk", "timezone": "Asia/Dubai", "country_code": "AE", "address_public": "Lobby, Grand Meridian Hotel", "latitude": 25.0805, "longitude": 55.1403, "opening_hours": "24 hours", "collection_instructions": "Ask the Front Desk for the duty manager." },
+        { "key": "gm_marina", "name": "Marina Tower Concierge", "timezone": "Asia/Dubai", "country_code": "AE", "address_public": "Marina Tower, Ground Floor", "latitude": 25.0812, "longitude": 55.1389, "opening_hours": "Daily 07:00-23:00", "collection_instructions": "Concierge desk, ground floor." }
+      ]
+    },
+    {
+      "key": "northgate", "name": "Northgate Mall", "slug": "northgate-mall", "type": "mall",
+      "description": "Fictional demo shopping mall.",
+      "locations": [
+        { "key": "ng_cs", "name": "Customer Service Desk", "timezone": "Asia/Dubai", "country_code": "AE", "address_public": "Level 1, next to the Food Court", "latitude": 25.1181, "longitude": 55.2006, "opening_hours": "Daily 10:00-22:00", "collection_instructions": "Show your pickup code at the Customer Service Desk." }
+      ]
+    }
+  ],
+  "memberships": [
+    { "user": "hv_staff", "organisation": "harbourview", "role": "staff", "locations": ["hv_t1", "hv_t3"] },
+    { "user": "hv_reviewer", "organisation": "harbourview", "role": "reviewer", "locations": [] },
+    { "user": "hv_manager", "organisation": "harbourview", "role": "manager", "locations": [] },
+    { "user": "gm_reviewer", "organisation": "grandmeridian", "role": "reviewer", "locations": [] },
+    { "user": "ng_manager", "organisation": "northgate", "role": "manager", "locations": [] }
+  ],
+  "found_reports": [
+    {
+      "key": "f_laptop", "created_by": "hv_staff", "organisation": "harbourview", "location": "hv_t1", "custody": "organisation_holds",
+      "category": "electronics", "item_label": "Laptop", "brand": null,
+      "description": "Silver laptop left on a seat at the gate B12 seating area. Has a sticker near the keyboard.",
+      "found_hours_ago": 20,
+      "attributes_public": { "colour": "silver" },
+      "attributes_private": { "sticker_description": "blue mountain sticker next to the trackpad", "damage": "small dent on the left rear corner" },
+      "storage_reference": "Cage 2, shelf L-04",
+      "_demo_note": "TARGET ITEM. Report a lost silver laptop near Terminal 1 to surface it."
+    },
+    {
+      "key": "f_black_laptop", "created_by": "hv_staff", "organisation": "harbourview", "location": "hv_t3", "custody": "organisation_holds",
+      "category": "electronics", "item_label": "Laptop", "brand": "Northwind",
+      "description": "Black laptop in a grey sleeve found at the security checkpoint trays.",
+      "found_hours_ago": 30,
+      "attributes_public": { "colour": "black" },
+      "attributes_private": { "serial_last4": "7731" },
+      "storage_reference": "Cage 1, shelf E-02",
+      "_demo_note": "Hard negative for the laptop."
+    },
+    {
+      "key": "f_backpack", "created_by": "hv_staff", "organisation": "harbourview", "location": "hv_t3", "custody": "organisation_holds",
+      "category": "bag", "item_label": "Backpack",
+      "description": "Black backpack with a red zip pull, found under seats near gate C4.",
+      "found_hours_ago": 26,
+      "attributes_public": { "colour": "black" },
+      "attributes_private": { "contents": "paperback novel and a reusable water bottle" },
+      "storage_reference": "Cage 3, shelf B-11"
+    },
+    {
+      "key": "f_tablet", "created_by": "gm_reviewer", "organisation": "grandmeridian", "location": "gm_front", "custody": "organisation_holds",
+      "category": "electronics", "item_label": "Tablet",
+      "description": "Silver tablet with a cracked screen protector, left in the lobby lounge.",
+      "found_hours_ago": 18,
+      "attributes_public": { "colour": "silver" },
+      "attributes_private": { "case": "no case" },
+      "storage_reference": "Back office safe",
+      "_demo_note": "Hard negative (other tenant, silver electronics)."
+    },
+    {
+      "key": "f_ring", "created_by": "gm_reviewer", "organisation": "grandmeridian", "location": "gm_marina", "custody": "organisation_holds",
+      "category": "jewellery", "item_label": "Ring",
+      "description": "Gold ring found by housekeeping beside the pool loungers.",
+      "found_hours_ago": 40,
+      "attributes_public": { "colour": "gold" },
+      "attributes_private": { "engraving": "initials inside the band" },
+      "storage_reference": "Duty manager safe"
+    },
+    {
+      "key": "f_keys", "created_by": "ng_manager", "organisation": "northgate", "location": "ng_cs", "custody": "organisation_holds",
+      "category": "keys", "item_label": "Car keys",
+      "description": "Car key fob with a red leather keyring, found in the Level 2 car park lift.",
+      "found_hours_ago": 10,
+      "attributes_public": { "colour": "red" },
+      "attributes_private": { "keyring_detail": "small brass charm" },
+      "storage_reference": "Drawer 3"
+    },
+    {
+      "key": "f_umbrella", "created_by": "ng_manager", "organisation": "northgate", "location": "ng_cs", "custody": "organisation_holds",
+      "category": "umbrella", "item_label": "Umbrella",
+      "description": "Navy folding umbrella found outside the cinema entrance.",
+      "found_hours_ago": 50,
+      "attributes_public": { "colour": "navy" },
+      "attributes_private": {},
+      "storage_reference": "Umbrella bin"
+    },
+    {
+      "key": "f_wallet", "reporter": "finder", "custody": "finder_holds",
+      "category": "wallet", "item_label": "Wallet",
+      "description": "Brown leather bifold wallet found on a bench at the metro station.",
+      "found_location": "Marina metro station",
+      "found_hours_ago": 8,
+      "attributes_public": { "colour": "brown" },
+      "attributes_private": { "contents": "library card and loyalty cards" }
+    }
+  ],
+  "lost_reports": [
+    {
+      "key": "l_backpack", "owner": "owner",
+      "category": "bag", "item_label": "Backpack",
+      "description": "Black backpack with a red zip pull. Left it at the gate before boarding.",
+      "lost_hours_ago_start": 30, "lost_hours_ago_end": 27,
+      "last_location": "Terminal 3, airport, near gate C4",
+      "attributes_public": { "colour": "black" },
+      "attributes_private": { "contents": "a paperback novel and a steel water bottle" }
+    },
+    {
+      "key": "l_ring", "owner": "other",
+      "category": "jewellery", "item_label": "Ring",
+      "description": "Gold ring, took it off at the hotel pool.",
+      "lost_hours_ago_start": 44, "lost_hours_ago_end": 41,
+      "last_location": "Grand Meridian Hotel pool, Marina Tower",
+      "attributes_public": { "colour": "gold" },
+      "attributes_private": { "engraving": "our initials inside" }
+    }
+  ],
+  "claims": [
+    {
+      "lost": "l_backpack", "found": "f_backpack", "claimant": "owner",
+      "statement": "This is my backpack. I left it under the seat at gate C4 before boarding.",
+      "answers": {
+        "q_contents": "A paperback novel and a steel water bottle.",
+        "q_marks": "Red zip pull on the main pocket."
+      }
+    }
+  ]
+}
