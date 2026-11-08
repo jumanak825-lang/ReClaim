@@ -43,6 +43,7 @@ class CaptureOrderIn(Model):
 
 class WebhookAck(Model):
     received: bool
+    outcome: Literal["processed", "duplicate", "ignored"] | None = None
 
 
 # --- notifications --------------------------------------------------------
@@ -175,4 +176,10 @@ class DemoAccount(Model):
 
 class HealthOut(Model):
     status: Literal["ok"]
-    mode: Literal["stub"]
+    mode: Literal["database"]
+
+
+class ReadyOut(Model):
+    status: Literal["ready", "not_ready"]
+    database: bool
+    migrations: Literal["current", "pending", "unknown"]

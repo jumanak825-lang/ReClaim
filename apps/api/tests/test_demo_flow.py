@@ -147,7 +147,8 @@ def test_full_delivery_flow(client, login):
     # dispatch -> in_transit -> received -> completed
     rec = data(staff.post(f"/api/v1/recoveries/{rec['id']}/delivery/dispatch"))
     assert rec["status"] == "dispatched" and rec["tracking_reference"].startswith("SIM-")
-    rec = data(owner.post(f"/api/v1/dev/recoveries/{rec['id']}/advance-courier"))
+    err(owner.post(f"/api/v1/dev/recoveries/{rec['id']}/advance-courier"), 403, "FORBIDDEN")
+    rec = data(staff.post(f"/api/v1/dev/recoveries/{rec['id']}/advance-courier"))
     assert rec["status"] == "in_transit"
     rec = data(owner.post(f"/api/v1/recoveries/{rec['id']}/confirm-received"))
     assert rec["status"] == "completed"
@@ -173,12 +174,21 @@ def test_collection_flow(login):
     err(owner.post(f"/api/v1/recoveries/{rec['id']}/collection/confirm"), 403, "FORBIDDEN")
     staff_rec = data(reviewer.post(f"/api/v1/recoveries/{rec['id']}/collection/confirm"))
     assert staff_rec["pickup_token"] is None  # staff never see the code
-    token = data(owner.get(f"/api/v1/recoveries/{rec['id']}"))["pickup_token"]
-    assert token
+    # The code is only stored hashed: GET never returns it; the claimant reveals (rotates) it on demand.
+    assert data(owner.get(f"/api/v1/recoveries/{rec['id']}"))["pickup_token"] is None
+    assert "show_pickup_code" in data(owner.get(f"/api/v1/recoveries/{rec['id']}"))["available_actions"]
+    err(reviewer.post(f"/api/v1/recoveries/{rec['id']}/collection/pickup-token"), 403, "FORBIDDEN")
+    first = data(owner.post(f"/api/v1/recoveries/{rec['id']}/collection/pickup-token"))["pickup_token"]
+    token = data(owner.post(f"/api/v1/recoveries/{rec['id']}/collection/pickup-token"))["pickup_token"]
+    assert first and token and first != token
+    err(reviewer.post(f"/api/v1/recoveries/{rec['id']}/collection/validate-token", json={"token": first}),
+        400, "INVALID_PICKUP_TOKEN")  # rotated out
     err(reviewer.post(f"/api/v1/recoveries/{rec['id']}/collection/validate-token", json={"token": "WRONG-CODE"}),
         400, "INVALID_PICKUP_TOKEN")
-    done = data(reviewer.post(f"/api/v1/recoveries/{rec['id']}/collection/validate-token", json={"token": token}))
+    done = data(reviewer.post(f"/api/v1/recoveries/{rec['id']}/collection/validate-token",
+                              json={"token": token.lower()}))  # case/format-insensitive
     assert done["status"] == "completed"
+    err(owner.post(f"/api/v1/recoveries/{rec['id']}/collection/pickup-token"), 409, "RECOVERY_INVALID_STATE")
 
 
 def test_found_report_rules(login):

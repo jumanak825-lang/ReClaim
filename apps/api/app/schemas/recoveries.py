@@ -98,14 +98,15 @@ class RecoveryOut(Model):
     delivery_quote: DeliveryQuoteOut | None
     payment: PaymentOut | None
     pickup_token: str | None = Field(
-        description="Claimant only, while ready_for_pickup and unexpired. Never show on a public page."
+        description="Only in the response to POST .../collection/pickup-token (claimant, ready_for_pickup). "
+        "Null everywhere else: the server stores only a hash. Never show on a public page."
     )
     pickup_token_expires_at: datetime | None
     tracking_reference: str | None
     courier_is_simulated: bool = Field(description="Always true for now: label the courier as simulated.")
     timeline: list[RecoveryEventOut]
     available_actions: list[str] = Field(
-        description="claimant: pay_with_paypal, confirm_received, cancel; "
+        description="claimant: pay_with_paypal, show_pickup_code, confirm_received, cancel; "
         "staff: mark_ready_for_pickup, validate_pickup_token, dispatch, cancel"
     )
     created_at: datetime

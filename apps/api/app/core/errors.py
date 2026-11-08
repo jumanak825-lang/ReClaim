@@ -16,12 +16,14 @@ log = logging.getLogger("reclaim.api")
 
 
 class ApiError(Exception):
-    def __init__(self, status: int, code: str, message: str, details: dict[str, Any] | None = None):
+    def __init__(self, status: int, code: str, message: str, details: dict[str, Any] | None = None,
+                 headers: dict[str, str] | None = None):
         super().__init__(message)
         self.status = status
         self.code = code
         self.message = message
         self.details = details or {}
+        self.headers = headers or {}
 
 
 def not_found(entity: str) -> ApiError:
@@ -48,7 +50,7 @@ _HTTP_CODES = {
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, exc: ApiError) -> JSONResponse:
-        return JSONResponse(_body(exc.code, exc.message, exc.details), status_code=exc.status)
+        return JSONResponse(_body(exc.code, exc.message, exc.details), status_code=exc.status, headers=exc.headers)
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_: Request, exc: RequestValidationError) -> JSONResponse:
@@ -81,5 +83,6 @@ ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
         404: "Not found",
         409: "State conflict",
         422: "Semantic validation error",
+        429: "Rate limited (see Retry-After header)",
     }.items()
 }
