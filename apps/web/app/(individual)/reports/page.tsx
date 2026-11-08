@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { api, unwrap } from "@/lib/api/client";
 import { categoryLabel, fullDateTime, timeAgo } from "@/lib/labels";
 import { ReportStatusBadge } from "@/components/reports/report-status-badge";
+import { wizardHref } from "@/components/reports/resume-report";
 import { ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,7 @@ export default function MyReportsPage() {
         <>
           <ul className="divide-y rounded-lg border bg-card">
             {items.map((r) => {
-              const href = r.status === "draft" && r.report_type === "lost" ? `/report/lost?id=${r.id}` : `/reports/${r.id}`;
+              const href = r.status === "draft" ? wizardHref(r) : `/reports/${r.id}`;
               return (
                 <li key={r.id}>
                   <Link href={href} className="flex items-center gap-4 p-4 hover:bg-muted/50 focus-visible:bg-muted/50">

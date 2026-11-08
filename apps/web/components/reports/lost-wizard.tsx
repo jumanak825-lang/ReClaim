@@ -8,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { api, ApiError, unwrap, type Schemas } from "@/lib/api/client";
 import { fieldErrors } from "@/lib/api/form-errors";
 import type { Image } from "@/lib/api/uploads";
+import { toLocalInput } from "@/lib/datetime";
 import { categoryLabel } from "@/lib/labels";
 import { Field } from "@/components/auth/field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -59,13 +60,6 @@ const empty: LostForm = {
   images: [],
   private: {},
 };
-
-/** ISO (UTC) → value for <input type="datetime-local"> in the user's own timezone. */
-function toLocalInput(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-}
 
 function fromReport(r: Report): LostForm {
   return {

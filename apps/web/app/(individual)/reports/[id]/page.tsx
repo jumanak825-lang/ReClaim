@@ -7,6 +7,7 @@ import { EyeOff, Info, Loader2, Search } from "lucide-react";
 import { api, ApiError, unwrap, type Schemas } from "@/lib/api/client";
 import { categoryLabel, custodyLabel, fullDateTime, humanizeKey } from "@/lib/labels";
 import { ReportStatusBadge } from "@/components/reports/report-status-badge";
+import { wizardHref } from "@/components/reports/resume-report";
 import { ErrorState, LoadingState, PermissionDenied } from "@/components/states";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -56,7 +57,7 @@ export default function ReportDetailPage() {
 
 function ReportDetail({ r }: { r: Report }) {
   const isOwnerView = r.viewer_access !== "public";
-  const editHref = r.report_type === "lost" ? `/report/lost?id=${r.id}` : null;
+  const editHref = wizardHref(r);
   const when =
     r.report_type === "lost"
       ? r.lost_at_start
@@ -195,7 +196,7 @@ function MatchesSummary({ count }: { count: number }) {
   );
 }
 
-function Actions({ r, editHref }: { r: Report; editHref: string | null }) {
+function Actions({ r, editHref }: { r: Report; editHref: string }) {
   const queryClient = useQueryClient();
   const withdraw = useMutation({
     mutationFn: () => unwrap(api.POST("/api/v1/reports/{report_id}/withdraw", { params: { path: { report_id: r.id } } })),
@@ -205,7 +206,7 @@ function Actions({ r, editHref }: { r: Report; editHref: string | null }) {
       void queryClient.invalidateQueries({ queryKey: ["reports", "mine"] });
     },
   });
-  const canEdit = r.available_actions.includes("edit") && editHref;
+  const canEdit = r.available_actions.includes("edit");
   const canWithdraw = r.available_actions.includes("withdraw");
   if (!canEdit && !canWithdraw) return null;
 

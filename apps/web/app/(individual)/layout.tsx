@@ -8,6 +8,7 @@ import { LoadingState } from "@/components/states";
 const nav: NavItem[] = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/report/lost", label: "Report lost" },
+  { href: "/report/found", label: "Report found" },
   { href: "/reports", label: "My reports" },
 ];
 

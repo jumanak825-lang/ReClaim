@@ -31,12 +31,12 @@ async function fillSteps1to3(page: Page) {
   await page.getByLabel("What is it?").fill("Laptop");
   await page.getByLabel("Describe it").fill("Silver laptop with a small sticker near the keyboard.");
   await page.getByLabel("Main colour").fill("silver");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   await page.getByLabel("Where did you last have it?").fill("Terminal 1, airport");
   await page.getByLabel("Earliest time").fill(yesterdayAt(9));
   await page.getByLabel("Latest time (optional)").fill(yesterdayAt(11));
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   await page.locator('input[type="file"]').setInputFiles({ name: "laptop.png", mimeType: "image/png", buffer: PNG });
   await expect(page.getByRole("img", { name: "Photo 1" })).toBeVisible();
@@ -53,7 +53,7 @@ test("lost report wizard: draft at step 3, suggestions, privacy summary, submit,
   await expect(page).toHaveURL(/\/report\/lost\?id=/);
   await expect(page.getByRole("heading", { name: "Review suggestions" })).toBeVisible();
   await expect(page.getByText(/Suggestions \(basic keyword matching|AI suggestions/)).toBeVisible();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   // Step 5: privacy summary separates public and private.
   await expect(page.getByText("Can be shown to possible matches")).toBeVisible();
@@ -73,7 +73,7 @@ test("lost report wizard: draft at step 3, suggestions, privacy summary, submit,
 test("step 1 shows errors when required fields are missing", async ({ page }) => {
   await signInAs(page, "owner@reclaim.example");
   await page.goto("/report/lost");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.getByText("Choose a category.")).toBeVisible();
   await expect(page.getByText("Say what the item is.")).toBeVisible();
   await expect(page.getByLabel("What is it?")).toHaveAttribute("aria-invalid", "true");
@@ -86,12 +86,12 @@ test("'I'm not sure' allows continuing without a time", async ({ page }) => {
   await page.getByRole("option", { name: "Keys" }).click();
   await page.getByLabel("What is it?").fill("Keys");
   await page.getByLabel("Describe it").fill("Two keys on a red ring.");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Where did you last have it?").fill("Northgate Mall");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.getByText("Add an approximate time")).toBeVisible();
   await page.getByLabel("I'm not sure").check();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Photos and private details" })).toBeVisible();
 });
 
@@ -118,10 +118,10 @@ test("disguised file is rejected by the server", async ({ page }) => {
   await page.getByRole("option", { name: "Bag or luggage" }).click();
   await page.getByLabel("What is it?").fill("Bag");
   await page.getByLabel("Describe it").fill("Blue bag");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Where did you last have it?").fill("Front desk");
   await page.getByLabel("I'm not sure").check();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   await page.locator('input[type="file"]').setInputFiles({
     name: "photo.png",

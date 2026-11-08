@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Archive, FolderOpen, PackageCheck, Scale } from "lucide-react";
+import { AlertTriangle, Archive, ClipboardPlus, FolderOpen, PackageCheck, Scale } from "lucide-react";
 import { api, unwrap, type Schemas } from "@/lib/api/client";
 import { claimStatusLabel, fullDateTime, priorityLabel, recoveryStatusLabel, timeAgo } from "@/lib/labels";
 import { useOrg } from "@/components/organisation/org-shell";
@@ -11,6 +12,7 @@ import { ActivityList } from "@/components/activity-list";
 import { StatCard } from "@/components/stat-card";
 import { ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 // Screen 10 (docs/02 §2.4).
 export default function OrganisationOverviewPage() {
@@ -50,14 +52,21 @@ export default function OrganisationOverviewPage() {
             Overview · signed in as <span className="capitalize">{org.role}</span>
           </p>
         </div>
-        {visible.length > 0 && (
-          <LocationSelect
-            locations={visible}
-            value={locationId ?? ALL_LOCATIONS}
-            onChange={setLocation}
-            allLabel={org.location_ids.length ? "All my locations" : "All locations"}
-          />
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {visible.length > 0 && (
+            <LocationSelect
+              locations={visible}
+              value={locationId ?? ALL_LOCATIONS}
+              onChange={setLocation}
+              allLabel={org.location_ids.length ? "All my locations" : "All locations"}
+            />
+          )}
+          <Button asChild>
+            <Link href={`/report/found?org=${org.organisation_slug}`}>
+              <ClipboardPlus aria-hidden /> Log found item
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {overview.isPending ? (
