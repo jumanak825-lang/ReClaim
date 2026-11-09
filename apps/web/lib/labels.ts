@@ -87,3 +87,21 @@ export const custodyLabel: Record<NonNullable<Schemas["ReportOut"]["custody_stat
   transferred: "Handed to an organisation",
   released: "Returned to owner",
 };
+
+export const matchStatusLabel: Record<Schemas["MatchOut"]["status"], string> = {
+  candidate: "Possible match",
+  claim_started: "Claim in progress",
+  confirmed: "Confirmed",
+  dismissed: "Dismissed",
+};
+
+/** Money is integer minor units + ISO currency (docs/03 §3.9). */
+export function formatMoney(amountMinor: number, currency: string): string {
+  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amountMinor / 100);
+}
+
+export function dateRange(start: string | null, end: string | null): string {
+  if (!start) return "Time not given";
+  const fmt = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  return end && end !== start ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
+}

@@ -76,13 +76,17 @@ function DashboardBody({ data }: { data: Schemas["DashboardOut"] }) {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Active lost reports" value={c.active_lost_reports} icon={PackageSearch} />
-          <StatCard
-            label="Potential matches"
-            value={c.potential_matches}
-            icon={Search}
-            note="Possible matches, not confirmed ownership"
-          />
-          <StatCard label="Claims awaiting review" value={c.claims_awaiting_review} icon={Scale} />
+          <Link href="/matches" className="rounded-lg focus-visible:ring-2 focus-visible:ring-ring">
+            <StatCard
+              label="Potential matches"
+              value={c.potential_matches}
+              icon={Search}
+              note="Possible matches, not confirmed ownership"
+            />
+          </Link>
+          <Link href="/claims" className="rounded-lg focus-visible:ring-2 focus-visible:ring-ring">
+            <StatCard label="Claims awaiting review" value={c.claims_awaiting_review} icon={Scale} />
+          </Link>
           <StatCard label="Active recoveries" value={c.active_recoveries} icon={PackageCheck} />
         </div>
       </section>

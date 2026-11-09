@@ -102,7 +102,7 @@ function ReportDetail({ r }: { r: Report }) {
       )}
 
       {isOwnerView && r.status !== "draft" && r.processing_status === "completed" && (
-        <MatchesSummary count={r.match_count} />
+        <MatchesSummary count={r.match_count} href={r.report_type === "lost" ? `/matches?report=${r.id}` : null} />
       )}
 
       <section aria-labelledby="details-heading" className="grid gap-3 rounded-lg border bg-card p-5">
@@ -178,7 +178,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MatchesSummary({ count }: { count: number }) {
+function MatchesSummary({ count, href }: { count: number; href: string | null }) {
   return (
     <section aria-labelledby="matches-heading" className="flex gap-3 rounded-lg border bg-accent/40 p-4">
       <Search className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
@@ -191,6 +191,11 @@ function MatchesSummary({ count }: { count: number }) {
             ? "We'll keep looking and notify you if a possible match appears."
             : "AI-suggested candidates, not proof of ownership. You'll prove ownership privately if you make a claim."}
         </p>
+        {count > 0 && href && (
+          <Button asChild size="sm" className="mt-3">
+            <Link href={href}>View possible matches</Link>
+          </Button>
+        )}
       </div>
     </section>
   );

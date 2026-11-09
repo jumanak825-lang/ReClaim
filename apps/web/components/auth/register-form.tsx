@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, ApiError, unwrap } from "@/lib/api/client";
+import { api, ApiError, rateLimitMessage, unwrap } from "@/lib/api/client";
 import { fieldErrors } from "@/lib/api/form-errors";
 import { homeFor, meQueryKey } from "@/lib/api/me";
 import { safeNext } from "@/lib/safe-next";
@@ -29,11 +29,12 @@ export function RegisterForm() {
   const errors = fieldErrors(register.error);
   // The server's message is deliberately generic so it doesn't reveal whether an email is registered.
   const formError =
-    register.error instanceof ApiError && register.error.code === "REGISTRATION_FAILED"
+    rateLimitMessage(register.error) ??
+    (register.error instanceof ApiError && register.error.code === "REGISTRATION_FAILED"
       ? "We couldn't create an account with these details. If you already have one, sign in instead."
       : register.error && !Object.keys(errors).length
         ? "We couldn't create your account. Try again."
-        : null;
+        : null);
 
   return (
     <form

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, ApiError, unwrap } from "@/lib/api/client";
+import { api, ApiError, rateLimitMessage, unwrap } from "@/lib/api/client";
 import { fieldErrors } from "@/lib/api/form-errors";
 import { homeFor, meQueryKey } from "@/lib/api/me";
 import { safeNext } from "@/lib/safe-next";
@@ -26,11 +26,12 @@ export function SignInForm() {
 
   const errors = fieldErrors(signIn.error);
   const formError =
-    signIn.error instanceof ApiError && signIn.error.code === "INVALID_CREDENTIALS"
+    rateLimitMessage(signIn.error) ??
+    (signIn.error instanceof ApiError && signIn.error.code === "INVALID_CREDENTIALS"
       ? "Email or password is incorrect."
       : signIn.error && !Object.keys(errors).length
         ? "We couldn't sign you in. Try again."
-        : null;
+        : null);
 
   return (
     <form

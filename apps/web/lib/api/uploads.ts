@@ -1,4 +1,4 @@
-import { api, ApiError, unwrap, type Schemas } from "./client";
+import { api, ApiError, rateLimitMessage, unwrap, type Schemas } from "./client";
 
 export type Image = Schemas["ImageOut"];
 export type ImageVisibility = Image["visibility"];
@@ -31,6 +31,8 @@ export async function uploadImage(file: File, visibility: ImageVisibility): Prom
 
 /** User-facing message for upload failures, keyed on the server's stable error codes. */
 export function uploadErrorMessage(error: unknown): string {
+  const limited = rateLimitMessage(error);
+  if (limited) return limited;
   if (error instanceof ApiError) {
     switch (error.code) {
       case "UNSUPPORTED_FILE_TYPE":

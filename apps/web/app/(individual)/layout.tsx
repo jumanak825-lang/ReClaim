@@ -10,6 +10,8 @@ const nav: NavItem[] = [
   { href: "/report/lost", label: "Report lost" },
   { href: "/report/found", label: "Report found" },
   { href: "/reports", label: "My reports" },
+  { href: "/matches", label: "Matches" },
+  { href: "/claims", label: "My claims" },
 ];
 
 export default function IndividualLayout({ children }: LayoutProps<"/">) {

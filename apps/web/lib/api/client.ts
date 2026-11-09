@@ -50,3 +50,12 @@ function toApiError(error: unknown, response: Response): ApiError {
   }
   return new ApiError(response.status, "NETWORK_ERROR", "We couldn't reach Reclaim. Try again.");
 }
+
+/** "Too many attempts…" for 429 RATE_LIMITED (details.retry_after_seconds from the API), else null. */
+export function rateLimitMessage(error: unknown): string | null {
+  if (!(error instanceof ApiError) || error.code !== "RATE_LIMITED") return null;
+  const seconds = Number(error.details.retry_after_seconds);
+  return seconds > 0
+    ? `Too many attempts. Try again in ${seconds} second${seconds === 1 ? "" : "s"}.`
+    : "Too many attempts. Wait a moment and try again.";
+}
