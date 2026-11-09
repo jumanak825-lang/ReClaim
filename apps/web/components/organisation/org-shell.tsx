@@ -49,7 +49,10 @@ export function OrgShell({ children }: { children: ReactNode }) {
   }
 
   // Items are added as their pages land (docs/02 §2.3).
-  const nav: NavItem[] = [{ href: `/org/${orgSlug}`, label: "Overview" }];
+  const nav: NavItem[] = [
+    { href: `/org/${orgSlug}`, label: "Overview" },
+    { href: `/org/${orgSlug}/claims`, label: "Claims" },
+  ];
 
   return (
     <OrgContext value={membership}>

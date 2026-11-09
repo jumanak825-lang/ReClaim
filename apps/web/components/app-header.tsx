@@ -20,7 +20,8 @@ export function AppHeader({ nav, context, actions }: { nav: NavItem[]; context?:
         <div className="ml-auto">{actions}</div>
         <nav aria-label="Main" className="-mx-1 flex w-full gap-1 overflow-x-auto sm:order-none">
           {nav.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const nested = nav.some((other) => other !== item && other.href.startsWith(`${item.href}/`));
+            const active = pathname === item.href || (!nested && pathname.startsWith(`${item.href}/`));
             return (
               <Link
                 key={item.href}

@@ -59,3 +59,20 @@ export async function matchIdFor(page: Page, foundLabel: string, locationText?: 
   expect(m, `match for ${foundLabel}`).toBeTruthy();
   return m!.id;
 }
+
+/** As the signed-in owner, claim the given match through the API. Returns the claim id. */
+export async function claimViaApi(page: Page, matchId: string, statement = "This is mine; I lost it at the airport."): Promise<string> {
+  const res = await page.request.post(`/api/v1/matches/${matchId}/claims`, {
+    data: { statement, answers: [{ question_id: "q_marks", answer: "Blue mountain sticker near the trackpad, dent on rear corner" }] },
+  });
+  expect(res.ok(), await res.text()).toBeTruthy();
+  return (await res.json()).data.id as string;
+}
+
+/** Approve/reject/escalate in the review UI on the current org claim page. */
+export async function decide(page: Page, label: "Approve" | "Reject" | "Escalate", reason: string) {
+  await page.getByRole("button", { name: label, exact: true }).click();
+  const dialog = page.getByRole("alertdialog");
+  await dialog.getByLabel("Reason (required)").fill(reason);
+  await dialog.getByRole("button", { name: label, exact: true }).click();
+}
