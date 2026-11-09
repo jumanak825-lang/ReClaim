@@ -77,7 +77,7 @@ export default function OrganisationOverviewPage() {
         <OverviewCards data={overview.data} scoped={org.location_ids.length > 0} />
       )}
 
-      <PriorityQueue orgId={orgId} locationId={locationId} />
+      <PriorityQueue orgId={orgId} orgSlug={org.organisation_slug} locationId={locationId} />
 
       {overview.data && (
         <section aria-labelledby="activity-heading" className="grid gap-3">
@@ -117,7 +117,7 @@ function OverviewCards({ data, scoped }: { data: Schemas["OrgOverviewOut"]; scop
   );
 }
 
-function PriorityQueue({ orgId, locationId }: { orgId: string; locationId: string | null }) {
+function PriorityQueue({ orgId, orgSlug, locationId }: { orgId: string; orgSlug: string; locationId: string | null }) {
   const cases = useQuery({
     queryKey: ["org", orgId, "cases", { sort: "priority", limit: 5, locationId }],
     queryFn: () =>
@@ -147,9 +147,9 @@ function PriorityQueue({ orgId, locationId }: { orgId: string; locationId: strin
           {cases.data.map((c) => (
             <li key={c.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4">
               <div className="min-w-0 flex-1">
-                <p className="font-medium">
+                <Link href={`/org/${orgSlug}/cases/${c.id}`} className="font-medium underline-offset-4 hover:underline">
                   {c.item_label} <span className="font-normal text-muted-foreground">· {c.case_reference}</span>
-                </p>
+                </Link>
                 <p className="text-sm text-muted-foreground">
                   {[
                     c.location_name,

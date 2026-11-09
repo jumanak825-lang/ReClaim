@@ -49,9 +49,15 @@ export function OrgShell({ children }: { children: ReactNode }) {
   }
 
   // Items are added as their pages land (docs/02 §2.3).
+  // Hiding items is convenience only; the API enforces each role on every request.
+  const canAudit = ["reviewer", "manager", "admin"].includes(membership.role);
+  const canManage = ["manager", "admin"].includes(membership.role);
   const nav: NavItem[] = [
     { href: `/org/${orgSlug}`, label: "Overview" },
+    { href: `/org/${orgSlug}/operations`, label: "Operations" },
     { href: `/org/${orgSlug}/claims`, label: "Claims" },
+    ...(canAudit ? [{ href: `/org/${orgSlug}/audit`, label: "Audit log" }] : []),
+    ...(canManage ? [{ href: `/org/${orgSlug}/integrations`, label: "Integrations" }] : []),
   ];
 
   return (

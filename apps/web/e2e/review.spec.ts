@@ -8,6 +8,7 @@ test.beforeEach(async ({ request }) => {
 test("reviewer approves a claim with a reason; claimant sees the next step", async ({ page }) => {
   await signInAs(page, "reviewer@harbourview.example");
   await page.getByRole("link", { name: "Claims", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Claims", exact: true })).toBeVisible();
   await page.getByRole("link", { name: /Backpack/ }).click();
 
   await expect(page.getByRole("heading", { name: "AI assistance (not a decision)" })).toBeVisible();
