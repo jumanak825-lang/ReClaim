@@ -41,7 +41,7 @@ The home page shows the live API status, which confirms the proxy works.
 | `npm run build` | Production build (also type-checks) |
 | `npm run lint` | ESLint |
 | `npm run gen:api` | Regenerate API types |
-| `npm run test:e2e` | Playwright end-to-end tests. Starts the stub API (needs `apps/api/.venv`) and the dev server if they aren't already running, and resets the API's demo data first. First time only: `npx playwright install chromium`. |
+| `npm run test:e2e` | Playwright end-to-end tests against the real API. Needs Postgres running and migrated (`docker compose up -d db`, then `alembic upgrade head`; see apps/api/README.md). Starts the API with `ENABLE_DEV_ROUTES=true` and `RATE_LIMITS_ENABLED=false`, plus the dev server, unless they're already running. **If you already run the API yourself, start it with both of those set**, or resets fail and sign-ins hit the rate limit. Resets all demo data. First time only: `npx playwright install chromium`. |
 
 ## Auth
 

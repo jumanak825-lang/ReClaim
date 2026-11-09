@@ -13,7 +13,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Register */
+        /** Create an account and sign in. Rate limited per IP. */
         post: operations["register_api_v1_auth_register_post"];
         delete?: never;
         options?: never;
@@ -30,7 +30,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Login */
+        /** Sign in. Rate limited per IP and per email. */
         post: operations["login_api_v1_auth_login_post"];
         delete?: never;
         options?: never;
@@ -482,6 +482,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recoveries/{recovery_id}/collection/pickup-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Claimant: reveal a one-time pickup code (rotates any previous code). The code is returned only in this response; the server stores just its hash. */
+        post: operations["pickup_token_api_v1_recoveries__recovery_id__collection_pickup_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/recoveries/{recovery_id}/collection/validate-token": {
         parameters: {
             query?: never;
@@ -610,7 +627,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** PayPal webhook (stub: accepted and ignored) */
+        /** PayPal webhook. Signature verified with PayPal; duplicates are acknowledged and ignored. */
         post: operations["webhook_api_v1_payments_paypal_webhook_post"];
         delete?: never;
         options?: never;
@@ -899,7 +916,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload an image (JPEG/PNG/WebP) or PDF evidence, max 8 MB; pass the id in image_ids */
+        /** Upload an image (JPEG/PNG/WebP) or PDF evidence, max 8 MB; pass the id in image_ids. Rate limited per user. */
         post: operations["upload_api_v1_uploads_post"];
         delete?: never;
         options?: never;
@@ -931,8 +948,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Health */
+        /** Liveness: the process is up */
         get: operations["health_api_v1_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Readiness: database reachable and migrations applied (503 otherwise) */
+        get: operations["ready_api_v1_ready_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -950,7 +984,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Wipe all data and reload the demo seed (signs everyone out) */
+        /** Wipe ALL data and reload the demo seed (signs everyone out). Needs ENABLE_DEV_ROUTES=true */
         post: operations["reset_api_v1_dev_reset_post"];
         delete?: never;
         options?: never;
@@ -965,7 +999,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Demo Accounts */
+        /** Demo logins. Needs ENABLE_DEV_ROUTES=true */
         get: operations["demo_accounts_api_v1_dev_demo_accounts_get"];
         put?: never;
         post?: never;
@@ -984,7 +1018,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Move a dispatched delivery to in_transit now (otherwise automatic after ~20s) */
+        /** Staff: move a dispatched delivery to in_transit now (otherwise automatic after ~20s). Needs ENABLE_DEV_ROUTES=true */
         post: operations["advance_courier_api_v1_dev_recoveries__recovery_id__advance_courier_post"];
         delete?: never;
         options?: never;
@@ -1766,7 +1800,7 @@ export interface components {
              * Mode
              * @constant
              */
-            mode: "stub";
+            mode: "database";
         };
         /** ImageOut */
         ImageOut: {
@@ -2188,6 +2222,21 @@ export interface components {
             /** Longitude */
             longitude?: number | null;
         };
+        /** ReadyOut */
+        ReadyOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ready" | "not_ready";
+            /** Database */
+            database: boolean;
+            /**
+             * Migrations
+             * @enum {string}
+             */
+            migrations: "current" | "pending" | "unknown";
+        };
         /** RecoveryCreate */
         RecoveryCreate: {
             /**
@@ -2252,7 +2301,7 @@ export interface components {
             payment: components["schemas"]["PaymentOut"] | null;
             /**
              * Pickup Token
-             * @description Claimant only, while ready_for_pickup and unexpired. Never show on a public page.
+             * @description Only in the response to POST .../collection/pickup-token (claimant, ready_for_pickup). Null everywhere else: the server stores only a hash. Never show on a public page.
              */
             pickup_token: string | null;
             /** Pickup Token Expires At */
@@ -2268,7 +2317,7 @@ export interface components {
             timeline: components["schemas"]["RecoveryEventOut"][];
             /**
              * Available Actions
-             * @description claimant: pay_with_paypal, confirm_received, cancel; staff: mark_ready_for_pickup, validate_pickup_token, dispatch, cancel
+             * @description claimant: pay_with_paypal, show_pickup_code, confirm_received, cancel; staff: mark_ready_for_pickup, validate_pickup_token, dispatch, cancel
              */
             available_actions: string[];
             /**
@@ -2461,6 +2510,8 @@ export interface components {
         WebhookAck: {
             /** Received */
             received: boolean;
+            /** Outcome */
+            outcome?: ("processed" | "duplicate" | "ignored") | null;
         };
         /** ZapierTestIn */
         ZapierTestIn: {
@@ -2567,6 +2618,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     login_api_v1_auth_login_post: {
@@ -2638,6 +2698,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2717,6 +2786,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     password_forgot_api_v1_auth_password_forgot_post: {
@@ -2775,6 +2853,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2849,6 +2936,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2939,6 +3035,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     update_me_api_v1_me_patch: {
@@ -3017,6 +3122,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     dashboard_api_v1_me_dashboard_get: {
@@ -3084,6 +3198,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3169,6 +3292,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     create_found_api_v1_reports_found_post: {
@@ -3240,6 +3372,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3327,6 +3468,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     get_report_api_v1_reports__report_id__get: {
@@ -3396,6 +3546,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3483,6 +3642,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     submit_report_api_v1_reports__report_id__submit_post: {
@@ -3552,6 +3720,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3635,6 +3812,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     extract_api_v1_reports__report_id__extract_post: {
@@ -3711,6 +3897,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     get_extraction_api_v1_reports__report_id__extraction_get: {
@@ -3780,6 +3975,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3867,6 +4071,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     my_matches_api_v1_matches_mine_get: {
@@ -3938,6 +4151,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4021,6 +4243,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     dismiss_api_v1_matches__match_id__dismiss_post: {
@@ -4097,6 +4328,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     questions_api_v1_matches__match_id__verification_questions_get: {
@@ -4166,6 +4406,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4253,6 +4502,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     my_claims_api_v1_claims_mine_get: {
@@ -4331,6 +4589,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     get_claim_api_v1_claims__claim_id__get: {
@@ -4400,6 +4667,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4487,6 +4763,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     review_api_v1_claims__claim_id__review_post: {
@@ -4560,6 +4845,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4647,6 +4941,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     get_recovery_api_v1_recoveries__recovery_id__get: {
@@ -4723,6 +5026,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     confirm_collection_api_v1_recoveries__recovery_id__collection_confirm_post: {
@@ -4792,6 +5104,100 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    pickup_token_api_v1_recoveries__recovery_id__collection_pickup_token_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recovery_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_RecoveryOut_"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description State conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Semantic validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4879,6 +5285,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     quote_api_v1_recoveries__recovery_id__delivery_quote_post: {
@@ -4948,6 +5363,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5031,6 +5455,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     confirm_received_api_v1_recoveries__recovery_id__confirm_received_post: {
@@ -5100,6 +5533,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5187,6 +5629,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     create_order_api_v1_payments_paypal_create_order_post: {
@@ -5258,6 +5709,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5343,6 +5803,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     webhook_api_v1_payments_paypal_webhook_post: {
@@ -5352,7 +5821,13 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -5410,6 +5885,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5486,6 +5970,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5571,6 +6064,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     get_org_api_v1_organisations__org_id__get: {
@@ -5640,6 +6142,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5723,6 +6234,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     overview_api_v1_organisations__org_id__overview_get: {
@@ -5792,6 +6312,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5887,6 +6416,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     case_detail_api_v1_organisations__org_id__cases__case_id__get: {
@@ -5957,6 +6495,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6045,6 +6592,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     org_claims_api_v1_organisations__org_id__claims_get: {
@@ -6119,6 +6675,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6206,6 +6771,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     integrations_api_v1_organisations__org_id__integrations_get: {
@@ -6275,6 +6849,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6353,6 +6936,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6439,6 +7031,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     unread_count_api_v1_notifications_unread_count_get: {
@@ -6506,6 +7107,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6589,6 +7199,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     mark_all_read_api_v1_notifications_read_all_post: {
@@ -6656,6 +7275,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6741,6 +7369,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     upload_content_api_v1_uploads__image_id__content_get: {
@@ -6811,6 +7448,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6892,6 +7538,98 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ready_api_v1_ready_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadyOut"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description State conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Semantic validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     reset_api_v1_dev_reset_post: {
@@ -6959,6 +7697,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7040,6 +7787,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     advance_courier_api_v1_dev_recoveries__recovery_id__advance_courier_post: {
@@ -7109,6 +7865,15 @@ export interface operations {
             };
             /** @description Semantic validation error */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Rate limited (see Retry-After header) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

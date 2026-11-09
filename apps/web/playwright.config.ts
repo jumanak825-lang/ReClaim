@@ -1,12 +1,16 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// End-to-end tests run against the real stub API (apps/api) and this app, both started here
-// unless already running. The API needs its venv: see apps/api/README.md.
+// End-to-end tests run against the real API (apps/api, PostgreSQL) and this app, both started here
+// unless already running. Before the first run: `docker compose up -d db` and
+// `alembic upgrade head` (see apps/api/README.md). Set DATABASE_URL if your Postgres isn't on 5433.
+//
+// If you start the API yourself instead, give it ENABLE_DEV_ROUTES=true (tests reset data through
+// /dev/reset) and RATE_LIMITS_ENABLED=false (the suite signs in far more often than the auth limit).
 const python = process.platform === "win32" ? ".venv\\Scripts\\python" : ".venv/bin/python";
 
 export default defineConfig({
   testDir: "e2e",
-  fullyParallel: false, // tests share one in-memory API
+  fullyParallel: false, // tests share one database and reset it
   workers: 1,
   use: { baseURL: "http://localhost:3000", trace: "retain-on-failure" },
   projects: [
@@ -17,8 +21,10 @@ export default defineConfig({
     {
       command: process.env.E2E_API_CMD ?? `${python} -m uvicorn app.main:app --port 8000`,
       cwd: "../api",
-      url: "http://localhost:8000/api/v1/health",
+      // /ready, not /health: it waits for the database and current migrations.
+      url: "http://localhost:8000/api/v1/ready",
       reuseExistingServer: true,
+      env: { ...process.env, ENABLE_DEV_ROUTES: "true", RATE_LIMITS_ENABLED: "false" } as Record<string, string>,
     },
     {
       command: "npm run dev",
