@@ -24,7 +24,8 @@ export default defineConfig({
       // /ready, not /health: it waits for the database and current migrations.
       url: "http://localhost:8000/api/v1/ready",
       reuseExistingServer: true,
-      env: { ...process.env, ENABLE_DEV_ROUTES: "true", RATE_LIMITS_ENABLED: "false" } as Record<string, string>,
+      // PAYPAL_MODE=mock: the e2e run never depends on real PayPal Sandbox credentials.
+      env: { ...process.env, ENABLE_DEV_ROUTES: "true", RATE_LIMITS_ENABLED: "false", PAYPAL_MODE: "mock" } as Record<string, string>,
     },
     {
       command: "npm run dev",

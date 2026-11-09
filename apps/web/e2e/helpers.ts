@@ -76,3 +76,32 @@ export async function decide(page: Page, label: "Approve" | "Reject" | "Escalate
   await dialog.getByLabel("Reason (required)").fill(reason);
   await dialog.getByRole("button", { name: label, exact: true }).click();
 }
+
+/** Approve a claim through the API as the signed-in reviewer. */
+export async function approveViaApi(page: Page, claimId: string) {
+  const res = await page.request.post(`/api/v1/claims/${claimId}/review`, {
+    data: { decision: "approved", reason: "Private details matched in the demo setup." },
+  });
+  expect(res.ok(), await res.text()).toBeTruthy();
+}
+
+/** Seeded: Dana's backpack claim, approved by the airport reviewer. Leaves Dana signed in. Returns the claim id. */
+export async function approvedBackpackClaim(page: Page): Promise<string> {
+  await signInAs(page, "owner@reclaim.example");
+  const claimId = (await (await page.request.get("/api/v1/claims/mine")).json()).data[0].id as string;
+  await signOut(page);
+  await signInAs(page, "reviewer@harbourview.example");
+  await approveViaApi(page, claimId);
+  await signOut(page);
+  await signInAs(page, "owner@reclaim.example");
+  return claimId;
+}
+
+/** As the signed-in claimant, choose delivery through the API. Returns the recovery id. */
+export async function deliveryViaApi(page: Page, claimId: string): Promise<string> {
+  const res = await page.request.post(`/api/v1/claims/${claimId}/recoveries`, {
+    data: { method: "delivery", address: { recipient_name: "Dana", line1: "1 Road", city: "Dubai", country_code: "AE" } },
+  });
+  expect(res.ok(), await res.text()).toBeTruthy();
+  return (await res.json()).data.id as string;
+}

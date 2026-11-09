@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Info, Sparkles } from "lucide-react";
 import { api, ApiError, unwrap } from "@/lib/api/client";
 import { ConfirmAction } from "@/components/confirm-action";
+import { useOrg } from "@/components/organisation/org-shell";
+import { Button } from "@/components/ui/button";
 import { TextArea } from "@/components/reports/fields";
 import type { Claim } from "./claim-detail";
 
@@ -50,6 +53,7 @@ export function ReviewPanel({ claim }: { claim: Claim }) {
     <div className="grid gap-4">
       {c.ai_assist && <AiAssist assist={c.ai_assist} />}
       {c.available_actions.some((a) => decisions.some((d) => d.action === a)) && <Decide claim={c} />}
+      {c.recovery_id && <RecoveryLink recoveryId={c.recovery_id} />}
       {c.status !== "pending" && c.status !== "escalated" && c.decision_reason && (
         <p className="rounded-lg border bg-card p-4 text-sm">
           Decision reason: “{c.decision_reason}”
@@ -149,5 +153,17 @@ function Decide({ claim }: { claim: Claim }) {
           ))}
       </div>
     </section>
+  );
+}
+
+function RecoveryLink({ recoveryId }: { recoveryId: string }) {
+  const org = useOrg();
+  return (
+    <p className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-4 text-sm">
+      The claimant has chosen how to recover the item.
+      <Button asChild size="sm">
+        <Link href={`/org/${org.organisation_slug}/recoveries/${recoveryId}`}>Manage recovery</Link>
+      </Button>
+    </p>
   );
 }
