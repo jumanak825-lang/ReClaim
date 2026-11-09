@@ -5,7 +5,7 @@ AI-powered lost-and-found recovery network. Start with [docs/00_START_HERE.md](d
 | Path | What |
 |---|---|
 | [apps/api](apps/api) | FastAPI backend on PostgreSQL with an outbox worker. PayPal orders are still mocked. See its README for setup and the endpoint walkthrough. |
-| [apps/web](apps/web) | Next.js frontend. Foundation in place: proxy to the API, typed client and design tokens. See its README. |
+| [apps/web](apps/web) | Next.js frontend: every MVP screen for individuals and organisations, with Playwright end-to-end tests. See its README for setup and the **demo run sheet**. |
 | [docs](docs) | Product and engineering handover pack |
 
 Quick start for the API (needs Docker):

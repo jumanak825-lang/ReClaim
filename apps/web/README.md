@@ -16,7 +16,17 @@ npm install
 npm run dev                  # http://localhost:3000
 ```
 
-The home page shows the live API status, which confirms the proxy works.
+Sign in with a demo account (password `reclaim-demo`). See the run sheet below.
+
+## What's built
+
+| Area | Screens |
+|---|---|
+| Public & auth | Landing, sign in, register, password-reset notice |
+| Individuals | Dashboard, lost and found report wizards (drafts, AI suggestions), report detail, My reports, matches, claim with private questions and evidence, My claims, recovery choice, recovery timeline, PayPal return/cancel, pickup code, notifications |
+| Organisations | Overview with location selector and priority queue, Operations (AG Grid), case detail, claim queue and review, recovery management, audit log, integrations |
+
+Labelled as such in the UI: PayPal **Sandbox** (mocked locally when no PayPal credentials are set), **simulated** courier, keyword-based extraction when no AI key is set, and **seeded demo data**.
 
 ## How it talks to the API
 
@@ -64,3 +74,29 @@ Colours live as CSS variables in `app/globals.css` (docs/02 §2.1):
   review, `destructive` (red) for errors only.
 
 Change the brand colours there, not in components.
+
+## Demo run sheet
+
+The story from [docs/10_HACKATHON_DEMO.md](../../docs/10_HACKATHON_DEMO.md). It is also an automated test: `npx playwright test e2e/demo.spec.ts`.
+
+**Before you start:** API running with `ENABLE_DEV_ROUTES=true`, then reset the data with `POST /api/v1/dev/reset` (Swagger at http://localhost:8000/docs). In PowerShell:
+
+```powershell
+cd apps\api
+$env:ENABLE_DEV_ROUTES="true"; $env:RATE_LIMITS_ENABLED="false"; .venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
+```
+
+`RATE_LIMITS_ENABLED=false` avoids the 10-sign-ins-per-minute limit while switching accounts on stage. Never expose the API (e.g. through ngrok) with dev routes on.
+
+| Act | Who | Steps |
+|---|---|---|
+| 1. Report lost | `owner@reclaim.example` | **Report lost** → Electronics, "Laptop", mention *silver* and *sticker*, colour silver → "Terminal 1, airport", yesterday → add a photo and a private mark → review suggestions → privacy summary → submit |
+| 2. Found inventory | `staff@harbourview.example` | **Operations** grid; open the Terminal 1 laptop case (storage reference visible to staff only). **Log found item** shows the staff wizard |
+| 3. AI candidate | owner | Report page → **View possible matches** → the Terminal 1 laptop. Point out "AI relevance … not proof of ownership" and that hidden details aren't shown |
+| 4. Verify | owner, then `reviewer@harbourview.example` | **Claim this item** → describe the sticker and dent privately → submit. Reviewer: **Claims** → open it → AI assistance (not a decision) → **Approve** with a reason → **Audit log** shows it |
+| 5. Pay | owner | Bell → "Claim approved" → **Choose collection or delivery** → delivery address → price → **Pay with PayPal (Sandbox)** → approve → server-confirmed payment |
+| 6. Deliver | staff, then owner | Staff: recovery → **Dispatch (simulated courier)**. Courier moves to in transit automatically (or `POST /api/v1/dev/recoveries/{id}/advance-courier`). Owner: **I've received my item** → case closed |
+
+Zapier: as `manager@harbourview.example`, **Integrations** → **Send test event** (needs `ZAPIER_WEBHOOK_URL` on the API).
+
+**Known gap:** the overview's summary cards don't follow the location selector yet (needs `location_id` on `GET /organisations/{id}/overview`); the priority queue and Operations grid do.
