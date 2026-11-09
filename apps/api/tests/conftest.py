@@ -11,7 +11,8 @@ os.environ["ENABLE_DEV_ROUTES"] = "true"
 os.environ["RATE_LIMITS_ENABLED"] = "false"  # enabled per test where needed
 os.environ["SIMULATED_COURIER_SECONDS"] = "3600"
 os.environ["UPLOAD_DIR"] = tempfile.mkdtemp(prefix="reclaim-test-uploads-")
-for var in ("AI_API_KEY", "ZAPIER_WEBHOOK_URL", "ZAPIER_WEBHOOK_SECRET", "PAYPAL_CLIENT_ID",
+for var in ("AI_API_KEY", "ZAPIER_WEBHOOK_URL", "ZAPIER_URL_MATCH_HIGH_PRIORITY", "ZAPIER_URL_CLAIM_CREATED",
+            "ZAPIER_WEBHOOK_SECRET", "PAYPAL_CLIENT_ID",
             "PAYPAL_CLIENT_SECRET", "PAYPAL_WEBHOOK_ID"):
     os.environ[var] = ""
 

@@ -66,8 +66,12 @@ class Settings:
     paypal_client_secret: str = field(default_factory=lambda: _env("PAYPAL_CLIENT_SECRET"))
     paypal_webhook_id: str = field(default_factory=lambda: _env("PAYPAL_WEBHOOK_ID"))
 
-    # Zapier: one catch-hook URL from env for the hackathon (docs/11 §2).
+    # Zapier catch hooks from env (docs/11 §2). ZAPIER_WEBHOOK_URL receives every event. The per-event
+    # URLs override it, so each demo Zap can be a free two-step Zap (Catch Hook -> action) with no filter.
     zapier_webhook_url: str | None = field(default_factory=lambda: _env("ZAPIER_WEBHOOK_URL") or None)
+    zapier_url_match_high_priority: str | None = field(
+        default_factory=lambda: _env("ZAPIER_URL_MATCH_HIGH_PRIORITY") or None)
+    zapier_url_claim_created: str | None = field(default_factory=lambda: _env("ZAPIER_URL_CLAIM_CREATED") or None)
     zapier_webhook_secret: str = field(default_factory=lambda: _env("ZAPIER_WEBHOOK_SECRET"))
 
     # Simulated courier: dispatched -> in_transit after this many seconds.
@@ -91,6 +95,22 @@ class Settings:
     @property
     def paypal_is_sandbox(self) -> bool:
         return "sandbox" in self.paypal_base_url
+
+    def zapier_urls_for(self, event_type: str) -> list[str]:
+        """Catch-hook URLs an event goes to. Empty when nothing is configured for it (or no secret)."""
+        if not self.zapier_webhook_secret:
+            return []
+        per_event = {"match.high_priority": self.zapier_url_match_high_priority,
+                     "claim.created": self.zapier_url_claim_created}
+        if event_type in per_event:
+            urls = [per_event[event_type] or self.zapier_webhook_url]
+        else:  # integration.test: the shared hook, or every per-event hook so each Zap sees it
+            urls = [self.zapier_webhook_url] if self.zapier_webhook_url else list(per_event.values())
+        return list(dict.fromkeys(u for u in urls if u))
+
+    @property
+    def zapier_configured(self) -> bool:
+        return bool(self.zapier_urls_for("integration.test"))
 
     @property
     def paypal_webhook_configured(self) -> bool:

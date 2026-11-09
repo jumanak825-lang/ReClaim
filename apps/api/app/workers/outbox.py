@@ -47,8 +47,8 @@ def _handle(ev: OutboxEvent) -> None:
         return
     if ev.event_type in zapier.SUBSCRIBED_EVENTS:
         s = config.settings
-        if not (s.zapier_webhook_url and s.zapier_webhook_secret):
-            raise Skip("Zapier not configured")
+        if not s.zapier_urls_for(ev.event_type):
+            raise Skip("Zapier not configured for this event")
         zapier.deliver(zapier.envelope(str(ev.id), ev.event_type, ev.created_at.isoformat(),
                                        str(ev.organisation_id) if ev.organisation_id else None, ev.payload))
         return

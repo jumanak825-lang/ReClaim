@@ -55,8 +55,14 @@ def envelope(event_id: str, event_type: str, occurred_at: str, organisation_id: 
 
 
 def deliver(env: dict[str, Any]) -> None:
+    """POST the signed event to every hook configured for its type.
+
+    If any hook fails the whole event is retried, so a hook can see the same event id twice;
+    receivers dedupe on X-Reclaim-Event-Id. Errors never include the URL (it is a secret).
+    """
     s = config.settings
-    if not s.zapier_webhook_url or not s.zapier_webhook_secret:
+    urls = s.zapier_urls_for(env["event_type"])
+    if not urls:
         raise DeliveryError("Zapier is not configured")
     body = json.dumps(env, separators=(",", ":"), sort_keys=True).encode()
     ts = str(int(time.time()))
@@ -66,10 +72,11 @@ def deliver(env: dict[str, Any]) -> None:
         "X-Reclaim-Timestamp": ts,
         "X-Reclaim-Signature": sign(s.zapier_webhook_secret, ts, body),
     }
-    try:
-        with httpx.Client(timeout=10, transport=transport) as c:
-            r = c.post(s.zapier_webhook_url, content=body, headers=headers)
-    except httpx.HTTPError as exc:
-        raise DeliveryError(f"network error: {type(exc).__name__}") from exc
-    if r.status_code >= 300:
-        raise DeliveryError(f"HTTP {r.status_code}")
+    with httpx.Client(timeout=10, transport=transport) as c:
+        for i, url in enumerate(urls, 1):
+            try:
+                r = c.post(url, content=body, headers=headers)
+            except httpx.HTTPError as exc:
+                raise DeliveryError(f"hook {i}/{len(urls)}: network error: {type(exc).__name__}") from exc
+            if r.status_code >= 300:
+                raise DeliveryError(f"hook {i}/{len(urls)}: HTTP {r.status_code}")
