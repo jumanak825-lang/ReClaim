@@ -6,7 +6,7 @@ import { createContext, use, type ReactNode } from "react";
 import { Building2, ChevronDown } from "lucide-react";
 import { useMe, type Membership } from "@/lib/api/me";
 import { AppHeader, type NavItem } from "@/components/app-header";
-import { UserMenu } from "@/components/auth/user-menu";
+import { HeaderActions } from "@/components/header-actions";
 import { PermissionDenied } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,7 +56,7 @@ export function OrgShell({ children }: { children: ReactNode }) {
 
   return (
     <OrgContext value={membership}>
-      <AppHeader nav={nav} context={<OrgSwitcher current={membership} all={me.memberships} />} actions={<UserMenu />} />
+      <AppHeader nav={nav} context={<OrgSwitcher current={membership} all={me.memberships} />} actions={<HeaderActions />} />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8">{children}</main>
     </OrgContext>
   );
