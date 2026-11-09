@@ -109,12 +109,31 @@ SORTS = {
 }
 
 
+def _check_location(user: User, org_id: UUID, location_id: UUID) -> None:
+    """404 unless the location belongs to the org and is inside the caller's location scope.
+
+    Same 404 for "doesn't exist", "another org's" and "outside your scope", so ids don't leak.
+    """
+    loc = db().get(Location, location_id)
+    allowed = svc.scoped_location_ids(user, org_id)
+    if loc is None or loc.organisation_id != org_id or (allowed and location_id not in allowed):
+        raise not_found("location")
+
+
 @router.get("/organisations/{org_id}/overview", response_model=Envelope[OrgOverviewOut],
-            summary="Organisation overview cards")
-def overview(org_id: UUID, user: CurrentUser):
-    found = _org_found(user, org_id)
-    rows = [_case_row(r) for r in found]
+            summary="Organisation overview cards",
+            description="All counts are limited to the caller's assigned locations. `location_id` narrows them to "
+                        "one location; a location outside the caller's scope returns 404. `recent_activity` is the "
+                        "caller's own notifications and is not filtered by location.")
+def overview(org_id: UUID, user: CurrentUser,
+             location_id: Annotated[UUID | None, Query(description="Limit every count to this location")] = None):
+    found = _org_found(user, org_id)  # also checks membership (403/404) before the location check
     claims = svc.org_claims(user, org_id, None)  # location-scoped
+    if location_id:
+        _check_location(user, org_id, location_id)
+        found = [r for r in found if r.location_id == location_id]
+        claims = [c for c in claims if svc.claim_found(c).location_id == location_id]
+    rows = [_case_row(r) for r in found]
     recent = [P.activity(n) for n in svc.my_notifications(user, False)[:10]]
     return ok(OrgOverviewOut(
         active_cases=sum(1 for r in rows if r.report_status in {"active", "processing"}),
@@ -227,7 +246,7 @@ def integrations(org_id: UUID, user: CurrentUser):
                                                  OutboxEvent.event_type.in_(zapier.SUBSCRIBED_EVENTS),
                                                  OutboxEvent.attempt_count > 0)
                        .order_by(OutboxEvent.created_at.desc()).limit(1))
-    configured = bool(s.zapier_webhook_url and s.zapier_webhook_secret)
+    configured = s.zapier_configured
     return ok([IntegrationOut(
         provider="zapier",
         status="configured" if configured else "not_configured",
@@ -235,8 +254,8 @@ def integrations(org_id: UUID, user: CurrentUser):
         last_delivery=LastDelivery(event_type=last.event_type, status=last.delivery_status,
                                    attempted_at=last.delivered_at or last.created_at,
                                    error=last.last_error) if last else None,
-        note="Configured from server environment (ZAPIER_WEBHOOK_URL, ZAPIER_WEBHOOK_SECRET). "
-             "Events are HMAC-signed and retried from the outbox.",
+        note="Configured from server environment (ZAPIER_WEBHOOK_SECRET plus ZAPIER_WEBHOOK_URL and/or "
+             "the per-event ZAPIER_URL_* hooks). Events are HMAC-signed and retried from the outbox.",
     )])
 
 

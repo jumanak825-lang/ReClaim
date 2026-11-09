@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Reclaim API",
-    "description": "Lost-and-found recovery network API (PostgreSQL). Simulated parts are labelled: PayPal orders are mocked until Day 3, the courier is simulated, and extraction falls back to keyword rules when no AI key is configured. `/api/v1/dev/*` needs ENABLE_DEV_ROUTES=true.",
+    "description": "Lost-and-found recovery network API (PostgreSQL). Simulated parts are labelled: payments run on PayPal Sandbox (or a local mock checkout when no PayPal credentials are set), the courier is simulated, and extraction falls back to keyword rules when no AI key is configured. `/api/v1/dev/*` needs ENABLE_DEV_ROUTES=true.",
     "version": "0.2.0"
   },
   "paths": {
@@ -4578,6 +4578,7 @@
           "organisations"
         ],
         "summary": "Organisation overview cards",
+        "description": "All counts are limited to the caller's assigned locations. `location_id` narrows them to one location; a location outside the caller's scope returns 404. `recent_activity` is the caller's own notifications and is not filtered by location.",
         "operationId": "overview_api_v1_organisations__org_id__overview_get",
         "parameters": [
           {
@@ -4589,6 +4590,25 @@
               "format": "uuid",
               "title": "Org Id"
             }
+          },
+          {
+            "name": "location_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Limit every count to this location",
+              "title": "Location Id"
+            },
+            "description": "Limit every count to this location"
           }
         ],
         "responses": {

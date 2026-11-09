@@ -11,6 +11,9 @@ Rules enforced here:
 - Idempotency: client key on create, PayPal-Request-Id on create/capture, unique capture id,
   webhook dedup on (provider, event id).
 - Uncertain outcomes (network errors) queue a `payment.reconcile` job that asks PayPal.
+- A buyer who approves on PayPal but never comes back to the site: the CHECKOUT.ORDER.APPROVED
+  webhook queues the same job, which captures server-side, only while the recovery is still
+  awaiting payment.
 """
 
 from __future__ import annotations
@@ -37,8 +40,11 @@ log = logging.getLogger("reclaim.payments")
 RECONCILE_DELAY_SECONDS = 30
 
 
-def payment_by_order(order_id: str) -> Payment | None:
-    return db().scalar(select(Payment).where(Payment.provider_order_id == order_id))
+def payment_by_order(order_id: str, lock: bool = False) -> Payment | None:
+    """`lock=True` takes a row lock, so a browser capture, a webhook and the reconcile job
+    touching the same payment run one after another and the capture is applied once."""
+    q = select(Payment).where(Payment.provider_order_id == order_id)
+    return db().scalar(q.with_for_update() if lock else q)
 
 
 def _return_urls(rec: Recovery) -> tuple[str, str]:
@@ -170,7 +176,7 @@ def _apply_paypal_capture(p: Payment, actor: User | None, capture: dict[str, Any
 
 
 def capture_order(user: User, order_id: str) -> Payment:
-    p = payment_by_order(order_id)
+    p = payment_by_order(order_id, lock=True)
     if not p or p.user_id != user.id:
         raise not_found("payment")
     if p.status == "captured":
@@ -223,14 +229,25 @@ def reconcile(payment_id: UUID) -> str:
 
     Raises on network errors so the worker retries with backoff.
     """
-    p = db().get(Payment, payment_id)
+    p = db().get(Payment, payment_id, with_for_update=True)
     if not p or p.provider_mode != "sandbox" or p.status in {"captured", "failed", "refunded"}:
         return "nothing_to_do"
     order = paypal.get_order(p.provider_order_id)
     outcome = _apply_paypal_capture(p, None, paypal.first_capture(order))
-    if outcome == "none" and order.get("status") == "APPROVED" and p.status == "created":
-        p.status = "approved"  # buyer approved but capture never ran; the return page can retry it
-    return outcome
+    if outcome != "none" or order.get("status") != "APPROVED":
+        return outcome
+    # Approved at PayPal but never captured (buyer closed the tab, or the capture call was lost).
+    if db().get(Recovery, p.recovery_id).status != "awaiting_payment":
+        if p.status == "created":
+            p.status = "approved"  # recovery moved on (e.g. cancelled): don't take the money
+        return "none"
+    try:  # same PayPal-Request-Id as the browser capture, so PayPal treats a repeat as one capture
+        order = paypal.capture_order(p.provider_order_id, request_id=f"capture-{p.id}")
+    except paypal.OrderNotApproved:
+        return "none"
+    except paypal.OrderAlreadyCaptured:
+        order = paypal.get_order(p.provider_order_id)
+    return _apply_paypal_capture(p, None, paypal.first_capture(order))
 
 
 def get_payment(user: User, payment_id: UUID) -> Payment:
@@ -246,10 +263,14 @@ def get_payment(user: User, payment_id: UUID) -> Payment:
 def _redact(event: dict[str, Any]) -> dict[str, Any]:
     """Keep ids, statuses and amounts only; drop payer details (never store/log personal data)."""
     res = event.get("resource") or {}
+    if str(event.get("event_type", "")).startswith("CHECKOUT.ORDER."):
+        order_id = res.get("id")  # the resource is the order itself
+    else:
+        order_id = ((res.get("supplementary_data") or {}).get("related_ids") or {}).get("order_id")
     return {
         "id": event.get("id"), "event_type": event.get("event_type"), "create_time": event.get("create_time"),
         "resource": {"id": res.get("id"), "status": res.get("status"), "amount": res.get("amount"),
-                     "order_id": ((res.get("supplementary_data") or {}).get("related_ids") or {}).get("order_id")},
+                     "order_id": order_id},
     }
 
 
@@ -279,7 +300,7 @@ def handle_webhook(headers: dict[str, str], event: dict[str, Any]) -> str:
 
     outcome = "ignored"
     order_id = redacted["resource"]["order_id"]
-    p = payment_by_order(order_id) if order_id else None
+    p = payment_by_order(order_id, lock=True) if isinstance(order_id, str) else None
     resource = event.get("resource") or {}
     if p and p.status != "captured":
         if event_type == "PAYMENT.CAPTURE.COMPLETED":
@@ -287,6 +308,15 @@ def handle_webhook(headers: dict[str, str], event: dict[str, Any]) -> str:
                 outcome = "processed"
         elif event_type in {"PAYMENT.CAPTURE.DENIED", "PAYMENT.CAPTURE.DECLINED"}:
             p.status = "failed"
+            outcome = "processed"
+        elif (event_type == "CHECKOUT.ORDER.APPROVED" and p.provider_mode == "sandbox"
+              and p.status in {"created", "approved"}):
+            # Never trust the webhook body for money: the job re-reads the order from PayPal and
+            # captures only if the recovery is still awaiting payment. The delay lets the buyer's
+            # own return-page capture finish first; the job then finds it captured and stops.
+            p.status = "approved"
+            emit("payment.reconcile", "payment", p.id, None, {"payment_id": str(p.id)},
+                 delay_seconds=RECONCILE_DELAY_SECONDS)
             outcome = "processed"
     row.processing_status = outcome
     row.processed_at = now()

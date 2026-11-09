@@ -171,7 +171,10 @@ strong match and the silver tablet comes back as a weaker candidate.
 
 **Organisation portal**
 - `GET /me` → `memberships[]` drives the org switcher.
-- `GET /organisations/{org}/overview`: summary cards (`is_seeded_demo_data` → show a label)
+- `GET /organisations/{org}/overview?location_id=`: summary cards (`is_seeded_demo_data` → show a label).
+  Counts cover the caller's assigned locations; `location_id` narrows every count to one
+  location, and a location outside the caller's scope (or another org's) returns 404
+  `LOCATION_NOT_FOUND`. `recent_activity` is the caller's own notifications, so it isn't filtered.
 - `GET /organisations/{org}/cases?q=&status=&claim_status=&category=&location_id=&sort=-updated_at`: AG Grid rows
 - `GET /organisations/{org}/cases/{caseId}`: case detail
 - `GET /organisations/{org}/found-reports`, `/audit-logs`, `/integrations` (managers only)
@@ -241,17 +244,23 @@ These were needed for the screens and are part of the contract:
   advances. A network error during capture queues a `payment.reconcile` job that
   asks PayPal for the order and applies the result. A capture that arrives after
   the recovery was cancelled is recorded and flagged to managers for a manual
-  refund (refunds aren't automated).
+  refund (refunds aren't automated). The payment row is locked during capture, so a
+  browser capture, a webhook and the reconcile job never apply the same payment twice.
 - PayPal webhooks: verified with PayPal's `verify-webhook-signature` API using
   `PAYPAL_WEBHOOK_ID`. Unverified → 400. Not configured → 503 (never accepted
   unverified). Deduplicated on `(provider, provider_event_id)`. Only ids, statuses
-  and amounts are stored (`payload_redacted`). Handles `PAYMENT.CAPTURE.COMPLETED`
-  and `PAYMENT.CAPTURE.DENIED`.
+  and amounts are stored (`payload_redacted`). Handles `PAYMENT.CAPTURE.COMPLETED`,
+  `PAYMENT.CAPTURE.DENIED` and `CHECKOUT.ORDER.APPROVED`. The last covers a buyer who
+  approves on PayPal but never comes back to the site: it queues `payment.reconcile`
+  (30s delay, so the return page normally captures first). The job re-reads the order from
+  PayPal and captures it server-side with the same `PayPal-Request-Id` as the browser
+  capture, **only while the recovery is still awaiting payment**. A cancelled recovery
+  is never charged. The webhook body itself is never trusted for money.
 - Logging: one access line per request (request id, method, path, status, duration;
   no query strings or bodies). Uvicorn's own access log is off, and `httpx` logs
   only warnings, because a Zapier hook URL is a secret. A test checks that passwords,
   session cookies, claim text, PayPal credentials and the Zapier URL never reach the logs.
-- Zapier: events in the outbox are POSTed to `ZAPIER_WEBHOOK_URL` with
+- Zapier: events in the outbox are POSTed to their catch hook(s) (see the runbook) with
   `X-Reclaim-Event-Id`, `X-Reclaim-Timestamp` and
   `X-Reclaim-Signature: v1=<hex HMAC-SHA256(secret, "{timestamp}.{body}")>`.
   Only `match.high_priority`, `claim.created` and `integration.test` are sent
@@ -265,6 +274,9 @@ These were needed for the screens and are part of the contract:
 xAI's chat completions API with a strict JSON schema. Only `public_safe` images are
 sent. With no key, or on any error, the deterministic fallback runs instead.
 Confirm the model id and pricing on docs.x.ai before setting it (docs/11 §7).
+`scripts/check_ai.py` lists the model ids your key can use (marking image-capable ones)
+and runs one real extraction through the same code path, with no fallback, so a wrong id
+fails loudly there instead of quietly showing "AI unavailable" in the wizard.
 **The xAI call has only been tested against a mocked HTTP response, not the live API.**
 
 **Schema deviations from docs/04** (deliberate):
@@ -286,14 +298,14 @@ Run `alembic check` to confirm the models and migrations agree.
 |---|---|
 | User cannot access another user's private report | `test_full_delivery_flow` (404 for `other@`) |
 | Staff cannot access an unassigned organisation | `test_full_delivery_flow`, `test_cases_filters_sort_pagination_and_scope` |
-| Staff cannot access a location outside their scope | `test_reviewer_limited_to_one_location` |
+| Staff cannot access a location outside their scope | `test_reviewer_limited_to_one_location`, `test_overview_location_outside_scope_is_404` |
 | Public match response excludes private attributes | `test_public_match_and_found_views_exclude_private_values` |
 | Finder cannot read claimant answers | `test_full_delivery_flow` (non-reviewer staff get no answers/evidence) |
 | Non-reviewer cannot decide a claim | `test_full_delivery_flow` (`NOT_A_REVIEWER`) |
 | AI response cannot change claim status | by design (`ai_assist` is read-only); `test_extraction_never_overwrites_user_fields` |
 | Payment amount cannot be changed by client | `test_client_cannot_set_amount`, `test_create_order_uses_quote_and_is_idempotent` |
 | Invalid PayPal webhook signature is rejected | `test_webhook_bad_or_missing_signature_rejected` |
-| Duplicate PayPal webhook is idempotent | `test_webhook_captures_once_and_dedupes` |
+| Duplicate PayPal webhook is idempotent | `test_webhook_captures_once_and_dedupes`, `test_order_approved_webhook_then_browser_capture_charges_once` |
 | Duplicate capture request does not double charge | `test_capture_requires_approval_then_captures_once` |
 | Zapier signature/replay checks work | `test_zapier_signature_verification`, `test_zapier_events_signed_and_free_of_private_data` |
 | Expired pickup token is rejected | `test_expired_pickup_token_rejected` |
@@ -321,20 +333,53 @@ ngrok's free static domain (docs/11 §1). No Render deploy.
    `python -m app.seed` instead of the dev route.
 3. **Webhook.** In the PayPal developer dashboard (Sandbox app → Webhooks), add
    `https://<your-static-domain>.ngrok-free.app/api/v1/payments/paypal/webhook`
-   with the events `PAYMENT.CAPTURE.COMPLETED` and `PAYMENT.CAPTURE.DENIED`. Copy the
+   with the events `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED` and
+   `CHECKOUT.ORDER.APPROVED`. Copy the
    webhook id into `PAYPAL_WEBHOOK_ID`. The domain is static, so you register it only
    once; re-register if it ever changes (docs/11 §7).
 4. **Check.** Run a delivery checkout with the Sandbox buyer account. The recovery
    should move to `preparing`, and the webhook should appear in `webhook_events`
    with `processing_status` `processed` (or `ignored` if the browser capture got there first).
+   Then approve a second checkout on PayPal and **close the tab** instead of returning.
+   About 30s later the recovery should still move to `preparing` (server-side capture).
+   Resending a webhook from the dashboard should log `duplicate` and change nothing.
+5. **Grok.** `export AI_API_KEY=... AI_VISION_MODEL=...`, then
+   `.venv/Scripts/python scripts/check_ai.py`. Pick an image-capable id from its list.
 
-**Zapier.** Create a Catch Hook Zap. Set `ZAPIER_WEBHOOK_URL` to its URL and
-`ZAPIER_WEBHOOK_SECRET` to a long random string. Then call
-`POST /api/v1/integrations/zapier/test` as a manager. Zapier is outbound only, so no tunnel is needed.
-To verify signatures inside the Zap, add a Code step that computes
-`HMAC-SHA256(secret, X-Reclaim-Timestamp + "." + raw body)` and compares it with
-`X-Reclaim-Signature` (after `v1=`). Skip events older than 5 minutes, and dedupe on
-`X-Reclaim-Event-Id`, using a Zapier storage step or a Sheet lookup.
+**Zapier** (outbound only, so no tunnel is needed). Set `ZAPIER_WEBHOOK_SECRET` to a
+long random string, then either:
+- **One hook per Zap (recommended, works on Zapier's free plan).** Create two two-step
+  Zaps, each **Webhooks by Zapier → Catch Hook** followed by its action, with no filter:
+  - `ZAPIER_URL_MATCH_HIGH_PRIORITY` = Zap 1's hook URL → Slack message or email to staff.
+  - `ZAPIER_URL_CLAIM_CREATED` = Zap 2's hook URL → Google Sheets row with
+    `data.case_reference` and `data.status` only.
+- **One shared hook.** `ZAPIER_WEBHOOK_URL` receives every event, and each Zap filters
+  on `event_type`. A filter step makes it a multi-step Zap, which needs a **paid** Zapier plan.
+
+A per-event URL wins over `ZAPIER_WEBHOOK_URL`. `integration.test` goes to the shared hook,
+or to both per-event hooks if there's no shared one. Check it as a manager:
+**Integrations → Send test event** (`POST /api/v1/integrations/zapier/test`). Payload fields:
+`event_id, event_type, occurred_at, organisation_id, data`, where `data` is
+`{claim_id, case_reference, status, item_label}` for `claim.created` and
+`{match_id, score, label, item_label, category}` for `match.high_priority`. These are
+pinned by `test_zap_payload_fields_are_exactly_the_safe_ones`.
+Optional (adds a Code step, so also paid): verify `HMAC-SHA256(secret, X-Reclaim-Timestamp
++ "." + raw body)` against `X-Reclaim-Signature` (after `v1=`), skip events older than
+5 minutes, and dedupe on `X-Reclaim-Event-Id`.
+
+## Demo-day configuration
+
+ngrok makes the whole API public, so the demo laptop runs differently from local dev:
+
+| Setting | Local dev / e2e | Demo with ngrok |
+|---|---|---|
+| `ENABLE_DEV_ROUTES` | `true` | **`false`** (otherwise anyone with the URL can reset data or use the mock checkout) |
+| Reset demo data | `POST /api/v1/dev/reset` | `.venv/Scripts/python -m app.seed`, **before** starting ngrok |
+| `SIMULATED_COURIER_SECONDS` | `20` | `10` |
+| `RATE_LIMITS_ENABLED` / `RATE_LIMIT_AUTH` | `false` | `true` / `60/60` (many account switches from one IP) |
+| `PAYPAL_MODE` | `mock` (e2e pins this) | `sandbox` |
+
+Use seeded demo data only. Check that nothing secret shows in the terminal while sharing the screen.
 
 ## Layout
 
