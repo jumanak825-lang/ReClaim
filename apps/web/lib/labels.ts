@@ -95,6 +95,17 @@ export const matchStatusLabel: Record<Schemas["MatchOut"]["status"], string> = {
   dismissed: "Dismissed",
 };
 
+export const paymentStatusLabel: Record<NonNullable<Schemas["RecoveryOut"]["payment"]>["status"], string> = {
+  created: "Awaiting payment",
+  approved: "Approved, not yet captured",
+  captured: "Paid",
+  failed: "Failed",
+  voided: "Voided",
+  refunded: "Refunded",
+  partially_refunded: "Partly refunded",
+  unknown: "Unknown",
+};
+
 /** Money is integer minor units + ISO currency (docs/03 §3.9). */
 export function formatMoney(amountMinor: number, currency: string): string {
   return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amountMinor / 100);

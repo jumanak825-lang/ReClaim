@@ -24,6 +24,7 @@ export function ConfirmAction({
   title,
   description,
   confirmLabel,
+  pendingLabel = "Working…",
   destructive,
   onConfirm,
   pending,
@@ -32,10 +33,11 @@ export function ConfirmAction({
   children,
 }: {
   trigger: ReactNode;
-  triggerVariant?: "default" | "outline" | "ghost" | "secondary" | "destructive";
+  triggerVariant?: "default" | "outline" | "ghost" | "secondary" | "destructive" | "destructive-outline";
   title: string;
   description: ReactNode;
   confirmLabel: string;
+  pendingLabel?: string;
   destructive?: boolean;
   onConfirm: () => Promise<unknown>;
   pending?: boolean;
@@ -74,7 +76,7 @@ export function ConfirmAction({
               }
             }}
           >
-            {pending ? "Working…" : confirmLabel}
+            {pending ? pendingLabel : confirmLabel}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

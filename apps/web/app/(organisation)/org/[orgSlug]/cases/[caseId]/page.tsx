@@ -11,6 +11,7 @@ import { Relevance } from "@/components/matches/match-card";
 import { useOrg } from "@/components/organisation/org-shell";
 import { ReportStatusBadge } from "@/components/reports/report-status-badge";
 import { ErrorState, LoadingState, PermissionDenied } from "@/components/states";
+import { BackLink } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -44,22 +45,20 @@ export default function CaseDetailPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-4xl gap-6">
-      <Link href={`/org/${slug}/operations`} className="text-sm text-primary underline-offset-4 hover:underline">
-        ← Operations
-      </Link>
+      <BackLink href={`/org/${slug}/operations`}>Operations</BackLink>
       <div className="grid gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">Case {case_reference}</Badge>
           <ReportStatusBadge status={r.status} />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight">{r.item_label}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">{r.item_label}</h1>
         <p className="text-sm text-muted-foreground">
           {r.location?.name ?? r.location_label} · found {r.found_at ? fullDateTime(r.found_at) : "time not given"}
           {r.custody_status && ` · ${custodyLabel[r.custody_status]}`}
         </p>
       </div>
 
-      <section aria-labelledby="item-heading" className="grid gap-3 rounded-lg border bg-card p-5">
+      <section aria-labelledby="item-heading" className="grid gap-3 surface p-5">
         <h2 id="item-heading" className="font-semibold">
           Item
         </h2>
@@ -76,7 +75,7 @@ export default function CaseDetailPage() {
           ))}
         </dl>
         {(r.storage_reference || (r.attributes_private && Object.keys(r.attributes_private).length > 0)) && (
-          <div className="grid gap-2 rounded-md border border-dashed p-3">
+          <div className="grid gap-2 surface-private p-3">
             <h3 className="flex items-center gap-1.5 text-sm font-medium">
               <EyeOff className="size-4" aria-hidden /> Private: your organisation only
             </h3>
@@ -105,7 +104,7 @@ export default function CaseDetailPage() {
         {matches.length ? (
           <ul className="grid gap-2">
             {matches.map((m) => (
-              <li key={m.id} className="grid gap-2 rounded-lg border bg-card p-4">
+              <li key={m.id} className="grid gap-2 surface p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">Lost report: {m.lost_item.item_label}</span>
                   <Badge variant="outline">{matchStatusLabel[m.status]}</Badge>
@@ -127,7 +126,7 @@ export default function CaseDetailPage() {
           Claims
         </h2>
         {claims.length ? (
-          <ul className="divide-y rounded-lg border bg-card">
+          <ul className="divide-y surface">
             {claims.map((c) => (
               <li key={c.id}>
                 <Link href={`/org/${slug}/claims/${c.id}`} className="flex flex-wrap items-center gap-2 p-4 hover:bg-muted/50">
@@ -144,7 +143,7 @@ export default function CaseDetailPage() {
       </section>
 
       {recovery && (
-        <section aria-labelledby="recovery-heading" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
+        <section aria-labelledby="recovery-heading" className="flex flex-wrap items-center justify-between gap-3 surface p-4">
           <div>
             <h2 id="recovery-heading" className="font-semibold">
               Recovery

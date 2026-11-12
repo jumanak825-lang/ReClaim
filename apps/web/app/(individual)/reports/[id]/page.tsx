@@ -9,6 +9,7 @@ import { categoryLabel, custodyLabel, fullDateTime, humanizeKey } from "@/lib/la
 import { ReportStatusBadge } from "@/components/reports/report-status-badge";
 import { wizardHref } from "@/components/reports/resume-report";
 import { ErrorState, LoadingState, PermissionDenied } from "@/components/states";
+import { BackLink } from "@/components/page";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -69,13 +70,14 @@ function ReportDetail({ r }: { r: Report }) {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
+      {isOwnerView && <BackLink href="/reports">My reports</BackLink>}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="grid gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">{r.report_type === "lost" ? "Lost report" : "Found report"}</Badge>
             <ReportStatusBadge status={r.status} />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">{r.item_label}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">{r.item_label}</h1>
           <p className="text-sm text-muted-foreground">Reported {fullDateTime(r.created_at)}</p>
         </div>
         <Actions r={r} editHref={editHref} />
@@ -89,8 +91,8 @@ function ReportDetail({ r }: { r: Report }) {
         </Alert>
       )}
       {r.processing_status === "processing" && (
-        <p className="flex items-center gap-2 rounded-lg border bg-card p-4" role="status">
-          <Loader2 className="size-4 animate-spin text-primary" aria-hidden />
+        <p className="flex items-center gap-2 surface p-4" role="status">
+          <Loader2 className="size-4 animate-spin text-brand" aria-hidden />
           Looking for possible matches across participating locations…
         </p>
       )}
@@ -105,7 +107,7 @@ function ReportDetail({ r }: { r: Report }) {
         <MatchesSummary count={r.match_count} href={r.report_type === "lost" ? `/matches?report=${r.id}` : null} />
       )}
 
-      <section aria-labelledby="details-heading" className="grid gap-3 rounded-lg border bg-card p-5">
+      <section aria-labelledby="details-heading" className="grid gap-3 surface p-5">
         <h2 id="details-heading" className="font-semibold">
           Details
         </h2>
@@ -148,7 +150,7 @@ function ReportDetail({ r }: { r: Report }) {
       )}
 
       {r.attributes_private && (
-        <section aria-labelledby="private-heading" className="grid gap-3 rounded-lg border border-dashed p-5">
+        <section aria-labelledby="private-heading" className="grid gap-3 surface-private p-5">
           <h2 id="private-heading" className="flex items-center gap-1.5 font-semibold">
             <EyeOff className="size-4" aria-hidden /> Private details
           </h2>
@@ -180,8 +182,8 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function MatchesSummary({ count, href }: { count: number; href: string | null }) {
   return (
-    <section aria-labelledby="matches-heading" className="flex gap-3 rounded-lg border bg-accent/40 p-4">
-      <Search className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+    <section aria-labelledby="matches-heading" className="flex gap-3 surface-ai p-4">
+      <Search className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden />
       <div>
         <h2 id="matches-heading" className="font-semibold">
           {count === 0 ? "No possible matches yet" : count === 1 ? "1 possible match" : `${count} possible matches`}
@@ -233,7 +235,7 @@ function Actions({ r, editHref }: { r: Report; editHref: string }) {
         {canWithdraw && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" disabled={withdraw.isPending}>
+              <Button variant="destructive-outline" disabled={withdraw.isPending}>
                 {withdraw.isPending ? "Withdrawing…" : "Withdraw"}
               </Button>
             </AlertDialogTrigger>

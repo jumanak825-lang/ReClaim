@@ -27,7 +27,7 @@ export function ErrorState({
   retrying?: boolean;
 }) {
   return (
-    <StateBox icon={<AlertTriangle className="size-6 text-destructive" aria-hidden />} title={title} role="alert">
+    <StateBox icon={<AlertTriangle className="size-5 text-destructive" aria-hidden />} tint="bg-destructive/10" title={title} role="alert">
       <p className="text-muted-foreground">{message}</p>
       {onRetry && (
         <Button variant="outline" onClick={onRetry} disabled={retrying} className="mt-4">
@@ -40,7 +40,7 @@ export function ErrorState({
 
 export function PermissionDenied({ message, action }: { message: string; action?: ReactNode }) {
   return (
-    <StateBox icon={<ShieldX className="size-6 text-muted-foreground" aria-hidden />} title="You don't have access">
+    <StateBox icon={<ShieldX className="size-5 text-foreground" aria-hidden />} tint="bg-secondary" title="You don't have access">
       <p className="text-muted-foreground">{message}</p>
       {action && <div className="mt-4">{action}</div>}
     </StateBox>
@@ -49,19 +49,21 @@ export function PermissionDenied({ message, action }: { message: string; action?
 
 function StateBox({
   icon,
+  tint,
   title,
   role,
   children,
 }: {
   icon: ReactNode;
+  tint: string;
   title: string;
   role?: string;
   children: ReactNode;
 }) {
   return (
     <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center p-8 text-center" role={role}>
-      {icon}
-      <h2 className="mt-3 text-lg font-semibold">{title}</h2>
+      <span className={`flex size-12 items-center justify-center rounded-full ${tint}`}>{icon}</span>
+      <h2 className="mt-4 text-lg font-semibold">{title}</h2>
       <div className="mt-1">{children}</div>
     </div>
   );

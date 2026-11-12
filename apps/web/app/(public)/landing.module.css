@@ -1,0 +1,133 @@
+/*
+ * Landing page motion. Every animation ends in the element's normal visible state, scroll reveals
+ * only run where the browser supports scroll-driven animations, and "reduce motion" turns all of it off.
+ */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Page-load sequence: set --i on each element for the stagger. */
+.rise {
+  animation: rise 700ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* Sections fade up as they scroll into view. Without support they are simply visible. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+}
+
+/* Faint dot grid behind the hero: the network as a map. */
+.dots {
+  background-image: radial-gradient(color-mix(in srgb, var(--ink-foreground) 9%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Hero glow, kept subtle and on-brand. */
+.glow {
+  background: radial-gradient(60% 60% at 70% 40%, color-mix(in srgb, var(--brand) 28%, transparent), transparent 70%);
+}
+
+/* Network links: a slow marching dash. */
+@keyframes march {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+.link {
+  stroke-dasharray: 3 7;
+  animation: march 1.6s linear infinite;
+}
+
+/* The hub breathes. */
+@keyframes ring {
+  from {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+.ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ring 2.6s ease-out infinite;
+}
+
+/* Example match card slides in after the network is drawn. */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-12px, 12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast {
+  animation: slideIn 700ms var(--ease-out) 900ms both;
+}
+
+/* AI relevance bar fills as it scrolls into view. */
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.fill {
+  transform-origin: left;
+}
+@supports (animation-timeline: view()) {
+  .fill {
+    animation: fill linear both;
+    animation-timeline: view();
+    animation-range: entry 20% cover 45%;
+  }
+}
+
+/* Cards that invite a closer look. */
+.lift {
+  transition:
+    transform 220ms var(--ease-out),
+    border-color 220ms var(--ease-out);
+}
+.lift:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .reveal,
+  .link,
+  .ring,
+  .toast,
+  .fill {
+    animation: none !important;
+  }
+  .lift:hover {
+    transform: none;
+  }
+  /* SVG pulse dots use SMIL, which ignores the media query, so hide them. */
+  .pulse {
+    display: none;
+  }
+}

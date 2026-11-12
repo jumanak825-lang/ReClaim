@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, KeyRound, MapPin, Package, Truck } from "lucide-react";
+import { Check, CheckCircle2, Clock, KeyRound, MapPin, Package, Truck } from "lucide-react";
 import { api, ApiError, unwrap, type Schemas } from "@/lib/api/client";
-import { formatMoney, fullDateTime, recoveryStatusLabel } from "@/lib/labels";
+import { formatMoney, fullDateTime, paymentStatusLabel, recoveryStatusLabel } from "@/lib/labels";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field } from "@/components/auth/field";
+import { BackLink, SimBadge } from "@/components/page";
 import { TextArea } from "@/components/reports/fields";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -34,11 +35,12 @@ function errorText(e: unknown): string | null {
 }
 
 /** Recovery detail (Screen 13) for the claimant and for organisation staff. Actions come from the API. */
-export function RecoveryDetail({ recovery }: { recovery: Recovery }) {
+export function RecoveryDetail({ recovery, back }: { recovery: Recovery; back?: { href: string; label: string } }) {
   const r = recovery;
   const isClaimant = r.viewer_role === "claimant";
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
+      {back && <BackLink href={back.href}>{back.label}</BackLink>}
       <div className="grid gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={r.status === "completed" ? "default" : "outline"} className={r.status === "completed" ? "bg-success text-success-foreground" : undefined}>
@@ -47,7 +49,7 @@ export function RecoveryDetail({ recovery }: { recovery: Recovery }) {
           <Badge variant="outline">{r.method === "collection" ? "Collection" : "Delivery"}</Badge>
           <span className="text-sm text-muted-foreground">Claim {r.claim_reference}</span>
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight">Recovery: {r.item_label}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">Recovery: {r.item_label}</h1>
       </div>
 
       {r.status === "completed" && (
@@ -61,18 +63,20 @@ export function RecoveryDetail({ recovery }: { recovery: Recovery }) {
       {r.method === "collection" && r.collection && <CollectionCard r={r} />}
       {r.method === "delivery" && <DeliveryCard r={r} />}
 
+      <RecoveryStages r={r} />
+
       {isClaimant ? <ClaimantActions r={r} /> : <StaffActions r={r} />}
 
       <section aria-labelledby="timeline-heading" className="grid gap-3">
         <h2 id="timeline-heading" className="font-semibold">
-          Timeline
+          History
         </h2>
         <ol className="grid gap-3 border-l pl-4">
           {r.timeline.map((e, i) => (
             <li key={`${e.created_at}-${i}`} className="grid gap-0.5">
               <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
                 {e.description}
-                {e.is_simulated && <Badge variant="outline">Simulated</Badge>}
+                {e.is_simulated && <SimBadge>Simulated</SimBadge>}
               </p>
               <time dateTime={e.created_at} className="text-xs text-muted-foreground">
                 {fullDateTime(e.created_at)}
@@ -85,10 +89,78 @@ export function RecoveryDetail({ recovery }: { recovery: Recovery }) {
   );
 }
 
+type Stage = { label: string; state: "done" | "current" | "upcoming" };
+
+/**
+ * Where the recovery is up to, including what comes next (docs/02 Screen 13). Derived from the
+ * status only; the History list below is the record of what actually happened.
+ */
+function stagesFor(r: Recovery): Stage[] | null {
+  const collection = ["Claim approved", "Collection chosen", "Preparing for collection", "Ready for pickup", "Handed over"];
+  const delivery = [
+    "Claim approved",
+    "Delivery chosen",
+    "Delivery paid",
+    "Preparing for dispatch",
+    "Dispatched",
+    r.courier_is_simulated ? "In transit (simulated)" : "In transit",
+    "Received",
+    "Completed",
+  ];
+  const at: Partial<Record<Recovery["status"], number>> =
+    r.method === "collection"
+      ? { created: 2, preparing: 2, ready_for_pickup: 3, received: 4, completed: 5 }
+      : { created: 2, awaiting_payment: 2, preparing: 3, dispatched: 4, in_transit: 5, received: 6, completed: 8 };
+  const current = at[r.status];
+  if (current === undefined) return null; // cancelled, failed or disputed: no forward path to show
+  const labels = r.method === "collection" ? collection : delivery;
+  return labels.map((label, i) => ({ label, state: i < current ? "done" : i === current ? "current" : "upcoming" }));
+}
+
+function RecoveryStages({ r }: { r: Recovery }) {
+  const stages = stagesFor(r);
+  if (!stages) return null;
+  return (
+    <section aria-labelledby="stages-heading" className="grid gap-4 surface p-5">
+      <h2 id="stages-heading" className="font-semibold">
+        Progress
+      </h2>
+      <ol className="grid gap-0">
+        {stages.map((s, i) => (
+          <li key={s.label} className="relative flex gap-3 pb-4 last:pb-0" aria-current={s.state === "current" ? "step" : undefined}>
+            {i < stages.length - 1 && (
+              <span
+                className={`absolute top-6 bottom-0 left-[11px] w-0.5 ${s.state === "done" ? "bg-brand" : "bg-border"}`}
+                aria-hidden
+              />
+            )}
+            <span
+              className={`relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border-2 ${
+                s.state === "done"
+                  ? "border-brand bg-brand text-brand-foreground"
+                  : s.state === "current"
+                    ? "border-foreground bg-card"
+                    : "border-border bg-card"
+              }`}
+              aria-hidden
+            >
+              {s.state === "done" ? <Check className="size-3.5" /> : s.state === "current" && <span className="size-2 rounded-full bg-foreground" />}
+            </span>
+            <span className={`text-sm leading-6 ${s.state === "current" ? "font-semibold" : s.state === "upcoming" ? "text-muted-foreground" : ""}`}>
+              {s.label}
+              <span className="sr-only">{s.state === "done" ? " (done)" : s.state === "current" ? " (current step)" : " (to come)"}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function CollectionCard({ r }: { r: Recovery }) {
   const c = r.collection!;
   return (
-    <section aria-labelledby="collection-heading" className="grid gap-2 rounded-lg border bg-card p-4">
+    <section aria-labelledby="collection-heading" className="grid gap-2 surface p-4">
       <h2 id="collection-heading" className="flex items-center gap-1.5 font-semibold">
         <MapPin className="size-4" aria-hidden /> Collection
       </h2>
@@ -114,10 +186,10 @@ function DeliveryCard({ r }: { r: Recovery }) {
   const a = r.delivery_address;
   const q = r.delivery_quote;
   return (
-    <section aria-labelledby="delivery-heading" className="grid gap-3 rounded-lg border bg-card p-4">
+    <section aria-labelledby="delivery-heading" className="grid gap-3 surface p-4">
       <h2 id="delivery-heading" className="flex items-center gap-1.5 font-semibold">
         <Truck className="size-4" aria-hidden /> Delivery
-        {r.courier_is_simulated && <Badge variant="outline">Simulated courier</Badge>}
+        {r.courier_is_simulated && <SimBadge>Simulated courier</SimBadge>}
       </h2>
       {a && (
         <address className="text-sm not-italic">
@@ -140,8 +212,8 @@ function DeliveryCard({ r }: { r: Recovery }) {
       )}
       {r.payment && (
         <p className="flex flex-wrap items-center gap-2 text-sm">
-          Payment: <strong>{r.payment.status === "captured" ? "Paid" : r.payment.status}</strong>
-          {r.payment.is_sandbox && <Badge variant="outline">PayPal Sandbox · no real money</Badge>}
+          Payment: <strong>{paymentStatusLabel[r.payment.status]}</strong>
+          {r.payment.is_sandbox && <SimBadge>PayPal Sandbox · no real money</SimBadge>}
         </p>
       )}
       {r.tracking_reference && <p className="text-sm">Tracking reference: {r.tracking_reference} (simulated)</p>}
@@ -178,7 +250,7 @@ function ClaimantActions({ r }: { r: Recovery }) {
   if (!a.length) return null;
 
   return (
-    <section aria-label="Your next step" className="grid gap-3 rounded-lg border bg-accent/30 p-4">
+    <section aria-label="Your next step" className="grid gap-3 surface-action p-4">
       {a.includes("pay_with_paypal") && r.delivery_quote && (
         <div className="grid gap-2">
           <p className="text-sm">
@@ -247,7 +319,7 @@ function StaffActions({ r }: { r: Recovery }) {
   if (!a.length) return null;
 
   return (
-    <section aria-label="Staff actions" className="grid gap-4 rounded-lg border bg-accent/30 p-4">
+    <section aria-label="Staff actions" className="grid gap-4 surface-action p-4">
       {a.includes("mark_ready_for_pickup") && (
         <div className="grid gap-2">
           <p className="text-sm">When the item is at the desk, mark it ready. The claimant can then get their pickup code.</p>
@@ -303,7 +375,7 @@ function CancelRecovery({ r }: { r: Recovery }) {
     <div>
       <ConfirmAction
         trigger="Cancel recovery"
-        triggerVariant="ghost"
+        triggerVariant="destructive-outline"
         title="Cancel this recovery?"
         description="The item stays with the organisation. This can't be undone here."
         confirmLabel="Cancel recovery"

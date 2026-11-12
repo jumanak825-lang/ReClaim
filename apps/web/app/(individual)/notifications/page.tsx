@@ -10,6 +10,7 @@ import { notificationHref } from "@/lib/notification-href";
 import { cn } from "@/lib/utils";
 import { unreadCountKey } from "@/components/notifications/notification-bell";
 import { ErrorState, LoadingState } from "@/components/states";
+import { EmptyState, PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 
 type Notification = Schemas["NotificationOut"];
@@ -53,25 +54,27 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
-        {items.some((n) => !n.read_at) && (
-          <Button variant="outline" onClick={() => readAll.mutate()} disabled={readAll.isPending}>
-            {readAll.isPending ? "Marking…" : "Mark all as read"}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Notifications"
+        actions={
+          items.some((n) => !n.read_at) && (
+            <Button variant="outline" onClick={() => readAll.mutate()} disabled={readAll.isPending}>
+              {readAll.isPending ? "Marking…" : "Mark all as read"}
+            </Button>
+          )
+        }
+      />
       {list.isPending ? (
         <LoadingState label="Loading notifications…" />
       ) : list.error ? (
         <ErrorState onRetry={() => list.refetch()} retrying={list.isFetching} />
       ) : !items.length ? (
-        <p className="rounded-lg border bg-card p-8 text-center text-muted-foreground">
-          No notifications yet. We&apos;ll let you know about matches, claim decisions and recovery updates.
-        </p>
+        <EmptyState icon={Bell} title="No notifications yet">
+          We&apos;ll let you know about matches, claim decisions and recovery updates.
+        </EmptyState>
       ) : (
         <>
-          <ul className="divide-y rounded-lg border bg-card">
+          <ul className="divide-y surface">
             {items.map((n) => {
               const unread = !n.read_at;
               const href = notificationHref(n, me);
@@ -81,9 +84,9 @@ export default function NotificationsPage() {
                     type="button"
                     onClick={() => open(n)}
                     disabled={!href && !unread}
-                    className={cn("flex w-full gap-3 p-4 text-left hover:bg-muted/50 focus-visible:bg-muted/50 disabled:cursor-default", unread && "bg-accent/40")}
+                    className={cn("flex w-full gap-3 p-4 text-left transition-colors hover:bg-muted/60 disabled:cursor-default md:px-5", unread && "bg-accent/60")}
                   >
-                    {unread ? <BellDot className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden /> : <Bell className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />}
+                    {unread ? <BellDot className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden /> : <Bell className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />}
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">
                         {n.title}

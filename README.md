@@ -4,7 +4,7 @@ AI-powered lost-and-found recovery network. Start with [docs/00_START_HERE.md](d
 
 | Path | What |
 |---|---|
-| [apps/api](apps/api) | FastAPI backend on PostgreSQL with an outbox worker: PayPal Sandbox checkout with verified webhooks (local mock without credentials), signed Zapier events, Grok extraction with a keyword fallback. See its README for setup, the endpoint walkthrough and the demo-day runbook. |
+| [apps/api](apps/api) | FastAPI backend on PostgreSQL with an outbox worker: PayPal Sandbox checkout with verified webhooks (local mock without credentials), signed Zapier events, AI extraction through an OpenAI-compatible chat API (the demo runs a Qwen vision model on Groq) with a keyword fallback. See its README for setup, the endpoint walkthrough and the demo-day runbook. |
 | [apps/web](apps/web) | Next.js frontend: every MVP screen for individuals and organisations, with Playwright end-to-end tests. See its README for setup and the **demo run sheet**. |
 | [docs](docs) | Product and engineering handover pack |
 

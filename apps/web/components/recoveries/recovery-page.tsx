@@ -6,7 +6,15 @@ import { ErrorState, LoadingState, PermissionDenied } from "@/components/states"
 import { RecoveryDetail } from "./recovery-detail";
 import { useRecovery } from "./use-recovery";
 
-export function RecoveryPage({ id, back }: { id: string; back?: ReactNode }) {
+export function RecoveryPage({
+  id,
+  back,
+  backLink,
+}: {
+  id: string;
+  back?: ReactNode;
+  backLink?: { href: string; label: string };
+}) {
   const recovery = useRecovery(id);
   if (recovery.isPending) return <LoadingState label="Loading recovery…" />;
   if (recovery.error) {
@@ -16,5 +24,5 @@ export function RecoveryPage({ id, back }: { id: string; back?: ReactNode }) {
       <ErrorState onRetry={() => recovery.refetch()} retrying={recovery.isFetching} />
     );
   }
-  return <RecoveryDetail recovery={recovery.data} />;
+  return <RecoveryDetail recovery={recovery.data} back={backLink} />;
 }

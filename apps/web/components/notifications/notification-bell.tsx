@@ -16,11 +16,11 @@ export function NotificationBell() {
   });
   const count = unread.data?.unread ?? 0;
   return (
-    <Button asChild variant="ghost" size="sm" className="relative">
+    <Button asChild variant="ghost" size="icon" className="relative">
       <Link href="/notifications" aria-label={count ? `Notifications, ${count} unread` : "Notifications"}>
         <Bell aria-hidden />
         {count > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 font-semibold text-primary-foreground" aria-hidden>
+          <span className="absolute top-1 right-1 min-w-4 rounded-full bg-brand px-1 text-center text-[10px] leading-4 font-semibold text-brand-foreground" aria-hidden>
             {count > 9 ? "9+" : count}
           </span>
         )}

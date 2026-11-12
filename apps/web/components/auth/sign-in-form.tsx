@@ -66,7 +66,7 @@ export function SignInForm() {
         </Link>
         <Link
           href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"}
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-medium text-brand underline-offset-4 hover:underline"
         >
           Create an account
         </Link>

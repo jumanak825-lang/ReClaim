@@ -5,7 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api, unwrap } from "@/lib/api/client";
 import { MatchCard, OWNERSHIP_WARNING } from "@/components/matches/match-card";
+import { Search } from "lucide-react";
 import { ErrorState, LoadingState } from "@/components/states";
+import { EmptyState, PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 
 // Screen 7 (docs/02 §2.4). ?report=<id> narrows to one lost report's candidates.
@@ -23,29 +25,33 @@ export default function MatchesPage() {
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{reportId ? "Possible matches for your report" : "Possible matches"}</h1>
-        <p className="text-muted-foreground">{OWNERSHIP_WARNING} You&apos;ll prove ownership privately if you make a claim.</p>
-        {reportId && (
-          <Link href="/matches" className="text-sm text-primary underline-offset-4 hover:underline">
-            Show matches for all your reports
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        title={reportId ? "Possible matches for your report" : "Possible matches"}
+        description={<>{OWNERSHIP_WARNING} You&apos;ll prove ownership privately if you make a claim.</>}
+        actions={
+          reportId && (
+            <Link href="/matches" className="text-sm font-medium text-brand underline-offset-4 hover:underline">
+              Show matches for all your reports
+            </Link>
+          )
+        }
+      />
       {matches.isPending ? (
         <LoadingState label="Loading matches…" />
       ) : matches.error ? (
         <ErrorState onRetry={() => matches.refetch()} retrying={matches.isFetching} />
       ) : !items.length ? (
-        <div className="rounded-lg border bg-card p-8 text-center">
-          <h2 className="font-semibold">No possible matches yet</h2>
-          <p className="mx-auto mt-1 max-w-md text-muted-foreground">
-            We keep checking new found items across participating locations and will notify you if one may be yours.
-          </p>
-          <Button asChild variant="outline" className="mt-4">
-            <Link href="/report/lost">Report something lost</Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="No possible matches yet"
+          action={
+            <Button asChild variant="outline">
+              <Link href="/report/lost">Report something lost</Link>
+            </Button>
+          }
+        >
+          We keep checking new found items across participating locations and will notify you if one may be yours.
+        </EmptyState>
       ) : (
         <ul className="grid gap-3">
           {items.map((m) => (

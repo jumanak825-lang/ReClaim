@@ -9,6 +9,8 @@ import type { Image } from "@/lib/api/uploads";
 import { claimStatusLabel, fullDateTime } from "@/lib/labels";
 import { ClaimStatusBadge } from "@/components/claims/claim-status-badge";
 import { Relevance } from "@/components/matches/match-card";
+import { BackLink } from "@/components/page";
+import { cn } from "@/lib/utils";
 import { ImageUploader } from "@/components/reports/image-uploader";
 import { TextArea } from "@/components/reports/fields";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,17 +22,28 @@ export type Claim = Schemas["ClaimOut"];
  * Claim status (claimant) and claim detail (reviewers). Private sections render only when the API
  * returned them for this viewer; `reviewPanel` is the organisation's decision UI.
  */
-export function ClaimDetail({ claim, justSubmitted, reviewPanel }: { claim: Claim; justSubmitted?: boolean; reviewPanel?: ReactNode }) {
+export function ClaimDetail({
+  claim,
+  justSubmitted,
+  reviewPanel,
+  back,
+}: {
+  claim: Claim;
+  justSubmitted?: boolean;
+  reviewPanel?: ReactNode;
+  back?: { href: string; label: string };
+}) {
   const c = claim;
   const isClaimant = c.viewer_role === "claimant";
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-6">
+    <div className={cn("mx-auto grid w-full gap-6", reviewPanel ? "max-w-6xl" : "max-w-3xl")}>
+      {back && <BackLink href={back.href}>{back.label}</BackLink>}
       <div className="grid gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <ClaimStatusBadge status={c.status} />
           <span className="text-sm text-muted-foreground">Reference {c.reference}</span>
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight">Claim for {c.match.found_item.item_label.toLowerCase()}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">Claim: {c.match.found_item.item_label}</h1>
         <p className="text-sm text-muted-foreground">
           Submitted {fullDateTime(c.created_at)}
           {c.claimant_display_name && ` by ${c.claimant_display_name}`}
@@ -48,42 +61,51 @@ export function ClaimDetail({ claim, justSubmitted, reviewPanel }: { claim: Clai
       )}
 
       {isClaimant && <ClaimantNextStep c={c} />}
-      {reviewPanel}
 
-      <section aria-labelledby="match-heading" className="grid gap-2 rounded-lg border bg-card p-4">
-        <h2 id="match-heading" className="font-semibold">
-          Match
-        </h2>
-        <p className="text-sm">
-          Lost report: {c.match.lost_item.item_label} · Found item: {c.match.found_item.item_label}
-          {c.match.found_item.organisation_name && ` at ${c.match.found_item.approximate_location}, ${c.match.found_item.organisation_name}`}
-        </p>
-        <Relevance match={c.match} />
-      </section>
+      {/* Reviewers: the decision stays in view beside the evidence on wide screens. */}
+      <div className={reviewPanel ? "grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]" : "grid gap-6"}>
+        {reviewPanel && (
+          <aside aria-label="Review" className="grid gap-4 lg:sticky lg:top-28 lg:order-2">
+            {reviewPanel}
+          </aside>
+        )}
+        <div className="grid min-w-0 gap-6 lg:order-1">
+          <section aria-labelledby="match-heading" className="grid gap-2 surface p-4">
+            <h2 id="match-heading" className="font-semibold">
+              Match
+            </h2>
+            <p className="text-sm">
+              Lost report: {c.match.lost_item.item_label} · Found item: {c.match.found_item.item_label}
+              {c.match.found_item.organisation_name && ` at ${c.match.found_item.approximate_location}, ${c.match.found_item.organisation_name}`}
+            </p>
+            <Relevance match={c.match} />
+          </section>
 
-      {c.statement !== null && <PrivateSubmission c={c} />}
-      {isClaimant && c.available_actions.includes("add_evidence") && <AddEvidence claimId={c.id} />}
+          {c.statement !== null && <PrivateSubmission c={c} />}
+          {isClaimant && c.available_actions.includes("add_evidence") && <AddEvidence claimId={c.id} />}
 
-      <section aria-labelledby="history-heading" className="grid gap-3">
-        <h2 id="history-heading" className="flex items-center gap-1.5 font-semibold">
-          <History className="size-4" aria-hidden /> History
-        </h2>
-        <ol className="grid gap-3 border-l pl-4">
-          {c.history.map((h, i) => (
-            <li key={`${h.created_at}-${i}`} className="grid gap-0.5">
-              <p className="text-sm font-medium">
-                {h.from_status ? `${claimStatusLabel[h.from_status]} → ` : ""}
-                {claimStatusLabel[h.to_status]}
-                {h.actor_display_name && <span className="font-normal text-muted-foreground"> · {h.actor_display_name}</span>}
-              </p>
-              {h.reason && <p className="text-sm">“{h.reason}”</p>}
-              <time dateTime={h.created_at} className="text-xs text-muted-foreground">
-                {fullDateTime(h.created_at)}
-              </time>
-            </li>
-          ))}
-        </ol>
-      </section>
+          <section aria-labelledby="history-heading" className="grid gap-3">
+            <h2 id="history-heading" className="flex items-center gap-1.5 font-semibold">
+              <History className="size-4" aria-hidden /> History
+            </h2>
+            <ol className="grid gap-3 border-l pl-4">
+              {c.history.map((h, i) => (
+                <li key={`${h.created_at}-${i}`} className="grid gap-0.5">
+                  <p className="text-sm font-medium">
+                    {h.from_status ? `${claimStatusLabel[h.from_status]} → ` : ""}
+                    {claimStatusLabel[h.to_status]}
+                    {h.actor_display_name && <span className="font-normal text-muted-foreground"> · {h.actor_display_name}</span>}
+                  </p>
+                  {h.reason && <p className="text-sm">“{h.reason}”</p>}
+                  <time dateTime={h.created_at} className="text-xs text-muted-foreground">
+                    {fullDateTime(h.created_at)}
+                  </time>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
@@ -119,7 +141,7 @@ function ClaimantNextStep({ c }: { c: Claim }) {
     );
   }
   return (
-    <p className="rounded-lg border bg-card p-4 text-sm">
+    <p className="surface p-4 text-sm">
       {c.status === "escalated"
         ? "Your claim needs a further look by a senior reviewer. You can still add evidence."
         : "Waiting for review. You can add more evidence while it's being reviewed."}
@@ -129,7 +151,7 @@ function ClaimantNextStep({ c }: { c: Claim }) {
 
 function PrivateSubmission({ c }: { c: Claim }) {
   return (
-    <section aria-labelledby="private-heading" className="grid gap-4 rounded-lg border border-dashed p-5">
+    <section aria-labelledby="private-heading" className="grid gap-4 surface-private p-5">
       <div className="grid gap-1">
         <h2 id="private-heading" className="flex items-center gap-1.5 font-semibold">
           <EyeOff className="size-4" aria-hidden /> {c.viewer_role === "claimant" ? "Your private answers and evidence" : "Claimant's answers and evidence"}
@@ -158,7 +180,7 @@ function PrivateSubmission({ c }: { c: Claim }) {
               <li key={e.id} className="grid max-w-56 gap-1 text-sm">
                 {e.image ? (
                   e.image.content_type === "application/pdf" ? (
-                    <a href={e.image.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-primary underline-offset-4 hover:underline">
+                    <a href={e.image.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-brand underline-offset-4 hover:underline">
                       <FileText className="size-4" aria-hidden /> PDF document
                     </a>
                   ) : (
@@ -205,7 +227,7 @@ function AddEvidence({ claimId }: { claimId: string }) {
   });
 
   return (
-    <section aria-labelledby="add-evidence-heading" className="grid gap-4 rounded-lg border bg-card p-5">
+    <section aria-labelledby="add-evidence-heading" className="grid gap-4 surface p-5">
       <h2 id="add-evidence-heading" className="font-semibold">
         Add evidence
       </h2>

@@ -130,7 +130,7 @@ function ClaimForm({
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
       <div className="grid gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Claim the {itemLabel.toLowerCase()}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">Claim this item: {itemLabel}</h1>
         {relevance}
       </div>
 
@@ -144,7 +144,7 @@ function ClaimForm({
 
       <form
         noValidate
-        className="grid gap-5 rounded-lg border bg-card p-5 sm:p-6"
+        className="grid gap-5 surface p-5 sm:p-6"
         onSubmit={(e) => {
           e.preventDefault();
           if (!statement.trim()) {

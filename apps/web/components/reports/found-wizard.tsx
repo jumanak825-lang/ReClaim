@@ -259,13 +259,13 @@ export function FoundWizard({
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
       <div className="grid gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{isEdit ? "Edit your found report" : "Report something found"}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">{isEdit ? "Edit your found report" : "Report something found"}</h1>
         <Stepper steps={STEPS} current={step} />
       </div>
 
       <form
         noValidate
-        className="grid gap-5 rounded-lg border bg-card p-5 sm:p-6"
+        className="grid gap-5 surface p-5 sm:p-6"
         onSubmit={(e) => {
           e.preventDefault();
           if (step < STEPS.length - 1) void next();
@@ -355,7 +355,7 @@ export function FoundWizard({
         )}
 
         {step === 4 && (
-          <fieldset className="grid gap-4 rounded-md border border-dashed p-4">
+          <fieldset className="grid gap-4 surface-private p-4">
             <legend className="flex items-center gap-1.5 px-1 text-sm font-medium">
               <EyeOff className="size-4" aria-hidden /> Private details
             </legend>
@@ -519,7 +519,7 @@ function CustodyStep({
           <label
             key={o.value}
             className={cn(
-              "flex cursor-pointer gap-3 rounded-md border p-3 has-[:checked]:border-primary has-[:checked]:bg-accent/50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+              "flex cursor-pointer gap-3 rounded-md border p-3 has-checked:border-brand has-[:checked]:bg-accent/50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
             )}
           >
             <input
@@ -532,9 +532,9 @@ function CustodyStep({
                 set("orgId", "");
                 set("locationId", "");
               }}
-              className="mt-1 accent-[var(--primary)]"
+              className="mt-1 accent-brand"
             />
-            <o.icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+            <o.icon className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
             <span>
               <span className="block font-medium">{o.label}</span>
               <span className="block text-sm text-muted-foreground">{o.body}</span>
@@ -687,7 +687,7 @@ function Summary({ form, isStaff }: { form: FoundForm; isStaff: boolean }) {
           <dd>{form.images.length || "None"}</dd>
         </dl>
       </section>
-      <section className="grid gap-2 rounded-md border border-dashed p-4">
+      <section className="grid gap-2 surface-private p-4">
         <h3 className="flex items-center gap-1.5 font-medium">
           <EyeOff className="size-4" aria-hidden /> Private: only you and authorised reviewers
         </h3>

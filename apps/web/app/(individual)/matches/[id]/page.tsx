@@ -9,6 +9,7 @@ import { categoryLabel, dateRange, humanizeKey, matchStatusLabel } from "@/lib/l
 import { ConfirmAction } from "@/components/confirm-action";
 import { Relevance, type Match } from "@/components/matches/match-card";
 import { ErrorState, LoadingState, PermissionDenied } from "@/components/states";
+import { BackLink } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -53,10 +54,11 @@ function MatchDetail({ m }: { m: Match }) {
 
   return (
     <div className="mx-auto grid w-full max-w-4xl gap-6">
+      <BackLink href="/matches">Possible matches</BackLink>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="grid gap-2">
           <Badge variant="outline">{matchStatusLabel[m.status]}</Badge>
-          <h1 className="text-2xl font-semibold tracking-tight">Possible match: {m.found_item.item_label}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">Possible match: {m.found_item.item_label}</h1>
           <Relevance match={m} />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -85,14 +87,14 @@ function MatchDetail({ m }: { m: Match }) {
         </div>
       </div>
 
-      <section aria-labelledby="why-heading" className="grid gap-2 rounded-lg border bg-accent/40 p-5">
+      <section aria-labelledby="why-heading" className="grid gap-2 surface-ai p-5">
         <h2 id="why-heading" className="font-semibold">
           Why this may match
         </h2>
         <ul className="grid gap-1.5">
           {m.explanation.map((e) => (
             <li key={e} className="flex gap-2 text-sm">
-              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden /> {e}
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden /> {e}
             </li>
           ))}
         </ul>
@@ -120,7 +122,7 @@ function MatchDetail({ m }: { m: Match }) {
 
 function ItemSummary({ title, item }: { title: string; item: Schemas["MatchItemSummary"] }) {
   return (
-    <div className="grid content-start gap-3 rounded-lg border bg-card p-4">
+    <div className="grid content-start gap-3 surface p-4">
       <h3 className="font-medium">{title}</h3>
       {item.thumbnail_url ? (
         // eslint-disable-next-line @next/next/no-img-element

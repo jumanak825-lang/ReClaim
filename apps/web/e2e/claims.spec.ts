@@ -10,7 +10,7 @@ test("owner reviews a match and submits a private claim", async ({ page }) => {
   await createLaptopReport(page);
 
   await page.goto("/matches");
-  const card = page.getByRole("link", { name: /Found laptop.*Terminal 1/ });
+  const card = page.getByRole("link", { name: /Found item: Laptop.*Terminal 1/ });
   await expect(card).toContainText("AI relevance");
   await expect(card).toContainText("not proof of ownership");
   await card.click();
@@ -56,8 +56,8 @@ test("'Not my item' dismisses a candidate after confirmation", async ({ page }) 
   await expect(page.getByRole("alertdialog")).toContainText("Dismiss this match?");
   await page.getByRole("alertdialog").getByRole("button", { name: "Not my item" }).click();
   await expect(page).toHaveURL(/\/matches$/);
-  await expect(page.getByRole("link", { name: /Found tablet/ })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Found laptop/ }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Found item: Tablet/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Found item: Laptop/ }).first()).toBeVisible();
 });
 
 test("another user can't open someone's claim", async ({ page }) => {

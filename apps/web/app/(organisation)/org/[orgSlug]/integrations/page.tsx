@@ -3,9 +3,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, CircleSlash, Zap } from "lucide-react";
 import { api, ApiError, unwrap } from "@/lib/api/client";
-import { fullDateTime } from "@/lib/labels";
+import { fullDateTime, humanizeKey } from "@/lib/labels";
 import { useOrg } from "@/components/organisation/org-shell";
 import { ErrorState, LoadingState, PermissionDenied } from "@/components/states";
+import { PageHeader } from "@/components/page";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,18 +32,15 @@ export default function IntegrationsPage() {
 
   return (
     <div className="grid max-w-3xl gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
-        <p className="text-muted-foreground">
-          Reclaim sends signed events to your automations. Zapier can&apos;t change claims or payments; Reclaim stays the
-          source of truth.
-        </p>
-      </div>
+      <PageHeader
+        title="Integrations"
+        description="Reclaim sends signed events to your automations. Zapier can't change claims or payments; Reclaim stays the source of truth."
+      />
       {integrations.data.map((i) => (
-        <section key={i.provider} aria-labelledby={`${i.provider}-heading`} className="grid gap-3 rounded-lg border bg-card p-5">
+        <section key={i.provider} aria-labelledby={`${i.provider}-heading`} className="grid gap-3 surface p-5">
           <div className="flex flex-wrap items-center gap-2">
             <h2 id={`${i.provider}-heading`} className="flex items-center gap-1.5 font-semibold">
-              <Zap className="size-4 text-primary" aria-hidden /> Zapier
+              <Zap className="size-4 text-brand" aria-hidden /> Zapier
             </h2>
             {i.status === "configured" ? (
               <Badge className="bg-success text-success-foreground">
@@ -72,7 +70,7 @@ export default function IntegrationsPage() {
             <h3 className="font-medium">Last delivery</h3>
             {i.last_delivery ? (
               <p>
-                <span className="font-mono">{i.last_delivery.event_type}</span> · {i.last_delivery.status} ·{" "}
+                <span className="font-mono">{i.last_delivery.event_type}</span> · {humanizeKey(i.last_delivery.status)} ·{" "}
                 {fullDateTime(i.last_delivery.attempted_at)}
                 {i.last_delivery.error && <span className="block text-destructive">Error: {i.last_delivery.error}</span>}
               </p>

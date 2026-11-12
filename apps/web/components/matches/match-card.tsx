@@ -11,16 +11,16 @@ export const OWNERSHIP_WARNING = "This is an AI-generated candidate, not proof o
 /** "AI relevance 87 · Strong potential match", always next to the ownership caveat (FR-012). */
 export function Relevance({ match }: { match: Match }) {
   return (
-    <div className="grid gap-1">
+    <div className="grid gap-2">
       <p className="flex flex-wrap items-center gap-2 text-sm">
-        <Sparkles className="size-4 text-primary" aria-hidden />
-        <span>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-accent px-2.5 py-0.5 font-medium text-accent-foreground">
+          <Sparkles className="size-3.5" aria-hidden />
           AI relevance <strong className="tabular-nums">{Math.round(match.score)}</strong>
         </span>
-        <span className="text-muted-foreground">· {match.label}</span>
+        <span className="text-muted-foreground">{match.label}</span>
       </p>
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <ShieldAlert className="size-3.5" aria-hidden />
+      <p className="flex items-start gap-1.5 text-sm font-medium">
+        <ShieldAlert className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
         {match.ownership_warning ?? OWNERSHIP_WARNING}
       </p>
     </div>
@@ -31,7 +31,7 @@ export function Relevance({ match }: { match: Match }) {
 export function MatchCard({ match }: { match: Match }) {
   const f = match.found_item;
   return (
-    <li className="rounded-lg border bg-card">
+    <li className="surface">
       <Link href={`/matches/${match.id}`} className="flex gap-4 p-4 hover:bg-muted/40 focus-visible:bg-muted/40">
         {f.thumbnail_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -43,7 +43,7 @@ export function MatchCard({ match }: { match: Match }) {
         )}
         <div className="grid min-w-0 flex-1 gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">Found {f.item_label.toLowerCase()}</span>
+            <span className="font-medium">Found item: {f.item_label}</span>
             <Badge variant="outline">{matchStatusLabel[match.status]}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">

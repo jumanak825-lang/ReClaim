@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RegisterForm } from "@/components/auth/register-form";
 
-export const metadata: Metadata = { title: "Create an account · Reclaim" };
+export const metadata: Metadata = { title: "Create an account" };
 
 export default function RegisterPage() {
   return (

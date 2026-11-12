@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignInForm } from "@/components/auth/sign-in-form";
 
-export const metadata: Metadata = { title: "Sign in · Reclaim" };
+export const metadata: Metadata = { title: "Sign in" };
 
 export default function SignInPage() {
   return (

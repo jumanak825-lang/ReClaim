@@ -216,13 +216,13 @@ export function LostWizard({ existing, initialStep = 0 }: { existing?: Report; i
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
       <div className="grid gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{isEdit ? "Edit your lost report" : "Report something lost"}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">{isEdit ? "Edit your lost report" : "Report something lost"}</h1>
         <Stepper steps={STEPS} current={step} />
       </div>
 
       <form
         noValidate
-        className="grid gap-5 rounded-lg border bg-card p-5 sm:p-6"
+        className="grid gap-5 surface p-5 sm:p-6"
         onSubmit={(e) => {
           e.preventDefault();
           if (step < STEPS.length - 1) void next();
@@ -319,7 +319,7 @@ export function LostWizard({ existing, initialStep = 0 }: { existing?: Report; i
               images={form.images}
               onChange={(imgs) => set("images", imgs)}
             />
-            <fieldset className="grid gap-4 rounded-md border border-dashed p-4">
+            <fieldset className="grid gap-4 surface-private p-4">
               <legend className="flex items-center gap-1.5 px-1 text-sm font-medium">
                 <EyeOff className="size-4" aria-hidden /> Private details
               </legend>
@@ -433,7 +433,7 @@ function PrivacySummary({ form }: { form: LostForm }) {
           <dd>{form.images.length || "None"}</dd>
         </dl>
       </section>
-      <section className="grid gap-2 rounded-md border border-dashed p-4">
+      <section className="grid gap-2 surface-private p-4">
         <h3 className="flex items-center gap-1.5 font-medium">
           <EyeOff className="size-4" aria-hidden /> Private: only you and authorised reviewers
         </h3>

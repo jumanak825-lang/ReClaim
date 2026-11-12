@@ -19,7 +19,7 @@ export default function IndividualLayout({ children }: LayoutProps<"/">) {
     <Suspense fallback={<LoadingState />}>
       <AuthGate>
         <AppHeader nav={nav} actions={<HeaderActions />} />
-        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8">{children}</main>
+        <main id="main" className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 md:py-10">{children}</main>
       </AuthGate>
     </Suspense>
   );

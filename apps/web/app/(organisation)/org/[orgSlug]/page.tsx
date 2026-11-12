@@ -10,6 +10,7 @@ import { useOrg } from "@/components/organisation/org-shell";
 import { ALL_LOCATIONS, LocationSelect } from "@/components/organisation/location-select";
 import { ActivityList } from "@/components/activity-list";
 import { StatCard } from "@/components/stat-card";
+import { PageHeader, SimBadge } from "@/components/page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,14 +56,19 @@ export default function OrganisationOverviewPage() {
 
   return (
     <div className="grid gap-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{org.organisation_name}</h1>
-          <p className="text-muted-foreground">
-            Overview · signed in as <span className="capitalize">{org.role}</span>
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <PageHeader
+        eyebrow={
+          <>
+            <span className="font-semibold text-foreground">Overview</span>
+            <span aria-hidden>·</span>
+            <span>
+              Signed in as <span className="capitalize">{org.role}</span>
+            </span>
+          </>
+        }
+        title={org.organisation_name}
+        actions={
+          <>
           {visible.length > 0 && (
             <LocationSelect
               locations={visible}
@@ -76,22 +82,23 @@ export default function OrganisationOverviewPage() {
               <ClipboardPlus aria-hidden /> Log found item
             </Link>
           </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {overview.isPending ? (
         <LoadingState label="Loading overview…" />
       ) : overview.error ? (
         <ErrorState onRetry={() => overview.refetch()} retrying={overview.isFetching} />
       ) : (
-        <OverviewCards data={overview.data} scopeLabel={scopeLabel} />
+        <OverviewCards data={overview.data} scopeLabel={scopeLabel} orgSlug={org.organisation_slug} />
       )}
 
       <PriorityQueue orgId={orgId} orgSlug={org.organisation_slug} locationId={locationId} />
 
       {overview.data && (
         <section aria-labelledby="activity-heading" className="grid gap-3">
-          <h2 id="activity-heading" className="text-lg font-semibold">
+          <h2 id="activity-heading" className="text-xl font-semibold">
             Recent activity
           </h2>
           <ActivityList items={overview.data.recent_activity} empty="No recent activity." />
@@ -101,26 +108,34 @@ export default function OrganisationOverviewPage() {
   );
 }
 
-function OverviewCards({ data, scopeLabel }: { data: Schemas["OrgOverviewOut"]; scopeLabel: string }) {
+function OverviewCards({ data, scopeLabel, orgSlug }: { data: Schemas["OrgOverviewOut"]; scopeLabel: string; orgSlug: string }) {
+  const base = `/org/${orgSlug}`;
   return (
     <section aria-labelledby="summary-heading" className="grid gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 id="summary-heading" className="text-lg font-semibold">
+        <h2 id="summary-heading" className="text-xl font-semibold">
           Summary
         </h2>
         <span className="text-sm text-muted-foreground">{scopeLabel}</span>
-        {data.is_seeded_demo_data && <Badge variant="outline">Seeded demo data</Badge>}
+        {data.is_seeded_demo_data && <SimBadge>Seeded demo data</SimBadge>}
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Active cases" value={data.active_cases} icon={FolderOpen} />
-        <StatCard label="Found inventory" value={data.found_inventory} icon={Archive} note="Items your organisation holds" />
+        <StatCard label="Active cases" value={data.active_cases} icon={FolderOpen} href={`${base}/operations`} />
+        <StatCard
+          label="Found inventory"
+          value={data.found_inventory}
+          icon={Archive}
+          note="Items your organisation holds"
+          href={`${base}/operations`}
+        />
         <StatCard
           label="Pending claims"
           value={data.pending_claims}
           icon={Scale}
           note={data.escalated_claims ? `Plus ${data.escalated_claims} escalated` : undefined}
+          href={`${base}/claims`}
         />
-        <StatCard label="Recoveries in progress" value={data.recoveries_in_progress} icon={PackageCheck} />
+        <StatCard label="Recoveries in progress" value={data.recoveries_in_progress} icon={PackageCheck} href={`${base}/operations`} />
       </div>
     </section>
   );
@@ -142,7 +157,7 @@ function PriorityQueue({ orgId, orgSlug, locationId }: { orgId: string; orgSlug:
 
   return (
     <section aria-labelledby="queue-heading" className="grid gap-3">
-      <h2 id="queue-heading" className="text-lg font-semibold">
+      <h2 id="queue-heading" className="text-xl font-semibold">
         Priority queue
       </h2>
       {cases.isPending ? (
@@ -150,13 +165,13 @@ function PriorityQueue({ orgId, orgSlug, locationId }: { orgId: string; orgSlug:
       ) : cases.error ? (
         <ErrorState onRetry={() => cases.refetch()} retrying={cases.isFetching} />
       ) : !cases.data.length ? (
-        <p className="text-muted-foreground">No active cases{locationId ? " at this location" : ""}.</p>
+        <p className="surface p-5 text-muted-foreground">No active cases{locationId ? " at this location" : ""}.</p>
       ) : (
-        <ul className="divide-y rounded-lg border bg-card">
+        <ul className="divide-y surface">
           {cases.data.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4">
+            <li key={c.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4 md:px-5">
               <div className="min-w-0 flex-1">
-                <Link href={`/org/${orgSlug}/cases/${c.id}`} className="font-medium underline-offset-4 hover:underline">
+                <Link href={`/org/${orgSlug}/cases/${c.id}`} className="font-semibold underline-offset-4 hover:underline">
                   {c.item_label} <span className="font-normal text-muted-foreground">· {c.case_reference}</span>
                 </Link>
                 <p className="text-sm text-muted-foreground">

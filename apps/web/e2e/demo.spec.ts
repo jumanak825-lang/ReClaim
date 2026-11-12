@@ -33,7 +33,7 @@ test("demo happy path: report, match, claim, review, pay, deliver", async ({ pag
   // Act 3: the AI surfaces the airport's found laptop; the score is not ownership proof.
   await expect(page.getByRole("link", { name: "View possible matches" })).toBeVisible({ timeout: 20_000 });
   await page.getByRole("link", { name: "View possible matches" }).click();
-  await page.getByRole("link", { name: /Found laptop.*Terminal 1/ }).click();
+  await page.getByRole("link", { name: /Found item: Laptop.*Terminal 1/ }).click();
   await expect(page.getByText("not proof of ownership").first()).toBeVisible();
 
   // Act 4: verify ownership privately.

@@ -30,11 +30,10 @@ export default function OrgClaimPage() {
     );
   }
   return (
-    <div className="grid gap-4">
-      <Link href={`/org/${org.organisation_slug}/claims`} className="text-sm text-primary underline-offset-4 hover:underline">
-        ← All claims
-      </Link>
-      <ClaimDetail claim={claim.data} reviewPanel={<ReviewPanel claim={claim.data} />} />
-    </div>
+    <ClaimDetail
+      claim={claim.data}
+      reviewPanel={<ReviewPanel claim={claim.data} />}
+      back={{ href: `/org/${org.organisation_slug}/claims`, label: "All claims" }}
+    />
   );
 }

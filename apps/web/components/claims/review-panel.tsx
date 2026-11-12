@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Info, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Check, Info, Sparkles, X, type LucideIcon } from "lucide-react";
 import { api, ApiError, unwrap } from "@/lib/api/client";
 import { ConfirmAction } from "@/components/confirm-action";
 import { useOrg } from "@/components/organisation/org-shell";
@@ -14,11 +14,24 @@ import type { Claim } from "./claim-detail";
 type Decision = "approved" | "rejected" | "escalated";
 const MIN_REASON = 10;
 
-const decisions: { action: string; decision: Decision; label: string; title: string; description: string; destructive?: boolean }[] = [
+const decisions: {
+  action: string;
+  decision: Decision;
+  label: string;
+  pending: string;
+  icon: LucideIcon;
+  variant: "default" | "destructive-outline" | "outline";
+  title: string;
+  description: string;
+  destructive?: boolean;
+}[] = [
   {
     action: "approve",
     decision: "approved",
     label: "Approve",
+    pending: "Approving…",
+    icon: Check,
+    variant: "default",
     title: "Approve this claim?",
     description: "The claimant becomes the confirmed owner and can arrange collection or delivery. Only one claim per item can be approved.",
   },
@@ -26,6 +39,9 @@ const decisions: { action: string; decision: Decision; label: string; title: str
     action: "reject",
     decision: "rejected",
     label: "Reject",
+    pending: "Rejecting…",
+    icon: X,
+    variant: "destructive-outline",
     title: "Reject this claim?",
     description: "The claimant is told the claim wasn't approved. The item stays available for other claims.",
     destructive: true,
@@ -34,6 +50,9 @@ const decisions: { action: string; decision: Decision; label: string; title: str
     action: "escalate",
     decision: "escalated",
     label: "Escalate",
+    pending: "Escalating…",
+    icon: ArrowUpRight,
+    variant: "outline",
     title: "Escalate this claim?",
     description: "Send it for a further look by a senior reviewer before a final decision.",
   },
@@ -44,7 +63,7 @@ export function ReviewPanel({ claim }: { claim: Claim }) {
   const c = claim;
   if (c.viewer_role === "staff") {
     return (
-      <p className="rounded-lg border bg-card p-4 text-sm">
+      <p className="surface p-4 text-sm">
         <Info className="mr-1.5 inline size-4" aria-hidden /> Only reviewers can see the claimant&apos;s evidence and decide claims.
       </p>
     );
@@ -55,7 +74,7 @@ export function ReviewPanel({ claim }: { claim: Claim }) {
       {c.available_actions.some((a) => decisions.some((d) => d.action === a)) && <Decide claim={c} />}
       {c.recovery_id && <RecoveryLink recoveryId={c.recovery_id} />}
       {c.status !== "pending" && c.status !== "escalated" && c.decision_reason && (
-        <p className="rounded-lg border bg-card p-4 text-sm">
+        <p className="surface p-4 text-sm">
           Decision reason: “{c.decision_reason}”
         </p>
       )}
@@ -65,9 +84,9 @@ export function ReviewPanel({ claim }: { claim: Claim }) {
 
 function AiAssist({ assist }: { assist: NonNullable<Claim["ai_assist"]> }) {
   return (
-    <section aria-labelledby="ai-assist-heading" className="grid gap-2 rounded-lg border border-dashed bg-accent/30 p-4">
+    <section aria-labelledby="ai-assist-heading" className="grid gap-2 surface-ai p-5">
       <h2 id="ai-assist-heading" className="flex items-center gap-1.5 font-semibold">
-        <Sparkles className="size-4 text-primary" aria-hidden /> AI assistance (not a decision)
+        <Sparkles className="size-4 text-brand" aria-hidden /> AI assistance (not a decision)
       </h2>
       <p className="text-sm">{assist.summary}</p>
       {assist.flags.length > 0 && (
@@ -116,8 +135,8 @@ function Decide({ claim }: { claim: Claim }) {
   const valid = reason.trim().length >= MIN_REASON;
 
   return (
-    <section aria-labelledby="decide-heading" className="grid gap-3 rounded-lg border bg-card p-4">
-      <h2 id="decide-heading" className="font-semibold">
+    <section aria-labelledby="decide-heading" className="grid gap-4 surface-action p-5">
+      <h2 id="decide-heading" className="text-lg font-semibold">
         Decision
       </h2>
       <p className="text-sm text-muted-foreground">
@@ -130,11 +149,16 @@ function Decide({ claim }: { claim: Claim }) {
           .map((d) => (
             <ConfirmAction
               key={d.action}
-              trigger={d.label}
-              triggerVariant={d.action === "approve" ? "default" : "outline"}
+              trigger={
+                <>
+                  <d.icon aria-hidden /> {d.label}
+                </>
+              }
+              triggerVariant={d.variant}
               title={d.title}
               description={d.description}
               confirmLabel={d.label}
+              pendingLabel={d.pending}
               destructive={d.destructive}
               canConfirm={valid}
               pending={review.isPending}
@@ -159,7 +183,7 @@ function Decide({ claim }: { claim: Claim }) {
 function RecoveryLink({ recoveryId }: { recoveryId: string }) {
   const org = useOrg();
   return (
-    <p className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-4 text-sm">
+    <p className="flex flex-wrap items-center justify-between gap-2 surface p-4 text-sm">
       The claimant has chosen how to recover the item.
       <Button asChild size="sm">
         <Link href={`/org/${org.organisation_slug}/recoveries/${recoveryId}`}>Manage recovery</Link>

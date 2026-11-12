@@ -118,10 +118,13 @@ function ChooseForm({ claimId, itemLabel, where }: { claimId: string; itemLabel:
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">How would you like to get your {itemLabel.toLowerCase()} back?</h1>
+      <div className="grid gap-1">
+        <h1 className="text-[1.75rem] leading-tight font-bold md:text-[2rem]">How would you like to get it back?</h1>
+        <p className="text-muted-foreground">{itemLabel}</p>
+      </div>
       <form
         noValidate
-        className="grid gap-5 rounded-lg border bg-card p-5 sm:p-6"
+        className="grid gap-5 surface p-5 sm:p-6"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -138,11 +141,11 @@ function ChooseForm({ claimId, itemLabel, where }: { claimId: string; itemLabel:
             <label
               key={o.value}
               className={cn(
-                "flex cursor-pointer gap-3 rounded-md border p-3 has-[:checked]:border-primary has-[:checked]:bg-accent/50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+                "flex cursor-pointer gap-3 rounded-md border p-3 has-checked:border-brand has-[:checked]:bg-accent/50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
               )}
             >
-              <input type="radio" name="method" value={o.value} checked={method === o.value} onChange={() => setMethod(o.value)} className="mt-1 accent-[var(--primary)]" />
-              <o.icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+              <input type="radio" name="method" value={o.value} checked={method === o.value} onChange={() => setMethod(o.value)} className="mt-1 accent-brand" />
+              <o.icon className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
               <span>
                 <span className="block font-medium">{o.title}</span>
                 <span className="block text-sm text-muted-foreground">{o.body}</span>

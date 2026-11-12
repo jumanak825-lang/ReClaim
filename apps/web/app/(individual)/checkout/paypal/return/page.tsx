@@ -9,7 +9,7 @@ import { api, ApiError, unwrap } from "@/lib/api/client";
 import { formatMoney } from "@/lib/labels";
 import { ErrorState, LoadingState } from "@/components/states";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { SimBadge } from "@/components/page";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -71,7 +71,7 @@ export default function PayPalReturnPage() {
           <span>
             {formatMoney(p.amount_minor, p.currency)} received for delivery. Staff will prepare your item for dispatch.
           </span>
-          {p.is_sandbox && <Badge variant="outline">PayPal Sandbox · no real money</Badge>}
+          {p.is_sandbox && <SimBadge>PayPal Sandbox · no real money</SimBadge>}
         </AlertDescription>
       </Alert>
       <Button asChild className="justify-self-start">

@@ -10,6 +10,7 @@ import { useOrg } from "@/components/organisation/org-shell";
 import { ALL_LOCATIONS, LocationSelect } from "@/components/organisation/location-select";
 import { CasesGrid, type CaseRow } from "@/components/organisation/cases-grid";
 import { ErrorState, LoadingState } from "@/components/states";
+import { PageHeader } from "@/components/page";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -49,26 +50,26 @@ export default function OperationsPage() {
 
   return (
     <div className="grid gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Operations</h1>
-          <p className="text-muted-foreground">Found items your organisation holds, with matches, claims and recoveries.</p>
-        </div>
-        {visible.length > 0 && (
-          <LocationSelect
-            locations={visible}
-            value={locationId}
-            onChange={setLocationId}
-            allLabel={org.location_ids.length ? "All my locations" : "All locations"}
-          />
-        )}
-      </div>
+      <PageHeader
+        title="Operations"
+        description="Found items your organisation holds, with matches, claims and recoveries."
+        actions={
+          visible.length > 0 && (
+            <LocationSelect
+              locations={visible}
+              value={locationId}
+              onChange={setLocationId}
+              allLabel={org.location_ids.length ? "All my locations" : "All locations"}
+            />
+          )
+        }
+      />
 
       <div className="grid max-w-sm gap-1.5">
         <Label htmlFor="quick-search">Quick search</Label>
         <div className="relative">
-          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input id="quick-search" className="pl-8" placeholder="Item, case ID, location…" value={quick} onChange={(e) => setQuick(e.target.value)} />
+          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Input id="quick-search" className="pl-9" placeholder="Item, case ID, location…" value={quick} onChange={(e) => setQuick(e.target.value)} />
         </div>
       </div>
 
@@ -99,10 +100,10 @@ function CaseCards({ rows, quick, orgSlug }: { rows: CaseRow[]; quick: string; o
     : rows;
   return (
     <ul className="grid gap-2 md:hidden" aria-label="Cases">
-      {shown.length === 0 && <li className="rounded-lg border bg-card p-4 text-muted-foreground">No cases match.</li>}
+      {shown.length === 0 && <li className="surface p-4 text-muted-foreground">No cases match.</li>}
       {shown.map((r) => (
         <li key={r.id}>
-          <Link href={`/org/${orgSlug}/cases/${r.id}`} className="grid gap-1 rounded-lg border bg-card p-4 hover:bg-muted/50">
+          <Link href={`/org/${orgSlug}/cases/${r.id}`} className="grid gap-1 surface p-4 transition-colors hover:border-foreground/40">
             <span className="font-medium">
               {r.item_label} <span className="font-normal text-muted-foreground">· {r.case_reference}</span>
             </span>

@@ -2,142 +2,182 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Reclaim is light-only. `.dark` is never applied, so `dark:` classes in ui/ stay inert. */
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Reclaim design tokens. Change the brand here, not in components (docs/02 §2.1).
+ * Direction: charcoal for the main action, deep teal for brand, links, selection and focus,
+ * coral only for the landing page call to action, red only for destructive and error states.
+ * Elevation comes from surface contrast and hairlines, not shadows (overlays are the exception).
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-bright: var(--brand-bright);
+  --color-cta: var(--cta);
+  --color-cta-foreground: var(--cta-foreground);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted: var(--ink-muted);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Type: Inter only. Codes and audit events use the system monospace (no extra download). */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, monospace;
+  --text-display: 3.75rem;
+  --text-display--line-height: 1.07;
+  --text-display--letter-spacing: -0.025em;
+
+  /* Radius scale: 8 small, 12 controls and lists, 16 panels, 32 and 48 for landing surfaces. */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+  --radius-4xl: 48px;
+
+  /* Only floating overlays (menus, dialogs) get a shadow. */
+  --shadow-overlay: 0 12px 32px -12px rgb(22 25 28 / 0.25), 0 2px 6px rgb(22 25 28 / 0.08);
+
+  /* Motion: short and decelerating. Reduced-motion users get none (see below). */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: var(--ease-out);
 }
 
 :root {
-  --background: oklch(0.985 0.003 247);
-  --foreground: oklch(0.24 0.035 258);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.035 258);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.035 258);
-  --primary: oklch(0.5 0.1 205);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.955 0.008 247);
-  --secondary-foreground: oklch(0.24 0.035 258);
-  --muted: oklch(0.955 0.008 247);
-  --muted-foreground: oklch(0.48 0.025 257);
-  --accent: oklch(0.95 0.025 205);
-  --accent-foreground: oklch(0.3 0.06 210);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.01 247);
-  --input: oklch(0.91 0.01 247);
-  --ring: oklch(0.5 0.1 205);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  /* Status colours (docs/02 §2.1): green = completed, amber = pending review. */
-  --success: oklch(0.52 0.12 152);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.8 0.15 80);
-  --warning-foreground: oklch(0.3 0.06 60);
-}
+  --background: #f9f9f9;
+  --foreground: #16191c;
+  --card: #ffffff;
+  --card-foreground: #16191c;
+  --popover: #ffffff;
+  --popover-foreground: #16191c;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  --success: oklch(0.7 0.14 152);
-  --success-foreground: oklch(0.2 0.04 152);
-  --warning: oklch(0.8 0.15 80);
-  --warning-foreground: oklch(0.25 0.05 60);
+  /* Main action: charcoal. */
+  --primary: #16191c;
+  --primary-foreground: #ffffff;
+  --secondary: #eef0f1;
+  --secondary-foreground: #16191c;
+  --muted: #f1f2f3;
+  --muted-foreground: #5b6065;
+
+  /* Brand teal. `brand` passes AA as text and as a fill with white; `brand-bright` is decoration only. */
+  --brand: #0b7f83;
+  --brand-foreground: #ffffff;
+  --brand-bright: #1ebfbf;
+  --accent: #e8f7f8;
+  --accent-foreground: #0a5c5f;
+
+  /* Landing page call to action only. Reference coral darkened for 5:1 with white text. */
+  --cta: #d91f45;
+  --cta-foreground: #ffffff;
+
+  /* Dark panels (landing hero, footer). */
+  --ink: #16191c;
+  --ink-foreground: #ffffff;
+  --ink-muted: #bfbfc0;
+
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  /* Status colours (docs/02 §2.1): green = completed, amber = pending review. */
+  --success: #1a7f4b;
+  --success-foreground: #ffffff;
+  --warning: #f5c04a;
+  --warning-foreground: #4a3305;
+
+  --border: #dadadd;
+  /* Input outlines need 3:1 against white (WCAG 1.4.11). */
+  --input: #8b9095;
+  --ring: #0b7f83;
+  --radius: 12px;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
+    @apply border-border;
   }
   html {
     @apply font-sans;
+    font-feature-settings: "cv11", "ss01";
+  }
+  body {
+    @apply bg-background text-foreground;
+    line-height: 1.6;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  h1 {
+    letter-spacing: -0.02em;
+  }
+  /* One visible focus style everywhere: a solid brand outline, offset from the control. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Surfaces by meaning. Use these instead of ad hoc border and background classes. */
+@utility surface {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+}
+/* AI output: always advisory. */
+@utility surface-ai {
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  background-color: var(--accent);
+}
+/* Private details: only the owner and authorised reviewers see these. */
+@utility surface-private {
+  border-radius: var(--radius-xl);
+  border: 1px dashed color-mix(in srgb, var(--input) 75%, transparent);
+  background-color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+/* The user's next step on a screen. */
+@utility surface-action {
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background-color: var(--card);
+  box-shadow: inset 4px 0 0 var(--brand);
+}
+
+/* Honour the OS "reduce motion" setting: stop spinners and transitions (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -12,6 +12,7 @@ export default function StaffRecoveryPage() {
   return (
     <RecoveryPage
       id={recoveryId}
+      backLink={{ href: `/org/${org.organisation_slug}/operations`, label: "Operations" }}
       back={
         <Button asChild variant="outline">
           <Link href={`/org/${org.organisation_slug}`}>Back to overview</Link>

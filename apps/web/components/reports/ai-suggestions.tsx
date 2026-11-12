@@ -66,9 +66,9 @@ export function AiSuggestions({
   const suggestions = suggestionsFrom(data).filter((s) => s.value.toLowerCase() !== current[s.field].trim().toLowerCase());
 
   return (
-    <section aria-labelledby="ai-heading" className="grid gap-3 rounded-lg border bg-accent/40 p-4">
+    <section aria-labelledby="ai-heading" className="grid gap-3 surface-ai p-4">
       <h3 id="ai-heading" className="flex items-center gap-2 font-medium">
-        <Sparkles className="size-4 text-primary" aria-hidden />
+        <Sparkles className="size-4 text-brand" aria-hidden />
         {data.is_fallback ? "Suggestions (basic keyword matching, AI unavailable)" : "AI suggestions"}
       </h3>
       <p className="text-sm text-muted-foreground">{data.disclaimer}</p>

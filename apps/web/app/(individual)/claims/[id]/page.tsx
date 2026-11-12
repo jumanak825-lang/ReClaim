@@ -28,5 +28,5 @@ export default function ClaimPage() {
       <ErrorState onRetry={() => claim.refetch()} retrying={claim.isFetching} />
     );
   }
-  return <ClaimDetail claim={claim.data} justSubmitted={submitted} />;
+  return <ClaimDetail claim={claim.data} justSubmitted={submitted} back={{ href: "/claims", label: "My claims" }} />;
 }

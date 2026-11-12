@@ -13,7 +13,7 @@ async function signInAs(page: Page, email: string) {
 }
 
 function card(page: Page, label: string) {
-  return page.locator("div.rounded-lg.border").filter({ has: page.getByText(label, { exact: true }) });
+  return page.locator("[data-slot=stat-card]").filter({ has: page.getByText(label, { exact: true }) });
 }
 
 test("individual dashboard shows the user's own counts and activity", async ({ page }) => {

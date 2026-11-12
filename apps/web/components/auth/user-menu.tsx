@@ -34,7 +34,7 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="max-w-48">
+        <Button variant="ghost" className="max-w-48">
           <span className="truncate">{me.display_name}</span>
           <ChevronDown className="size-4" aria-hidden />
         </Button>

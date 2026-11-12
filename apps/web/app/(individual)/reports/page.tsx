@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ClipboardList } from "lucide-react";
 import { api, unwrap } from "@/lib/api/client";
 import { categoryLabel, fullDateTime, timeAgo } from "@/lib/labels";
 import { ReportStatusBadge } from "@/components/reports/report-status-badge";
 import { wizardHref } from "@/components/reports/resume-report";
 import { ErrorState, LoadingState } from "@/components/states";
+import { EmptyState, PageHeader, SegmentedControl } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -45,52 +46,47 @@ export default function MyReportsPage() {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">My reports</h1>
-        <div className="flex gap-2">
-          <Button asChild>
-            <Link href="/report/lost">Report lost</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/report/found">Report found</Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="My reports"
+        description="Everything you've reported lost or found, and where each one is."
+        actions={
+          <>
+            <Button asChild>
+              <Link href="/report/lost">Report lost</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/report/found">Report found</Link>
+            </Button>
+          </>
+        }
+      />
 
-      <div role="group" aria-label="Filter reports" className="flex gap-1">
-        {filters.map((f) => (
-          <Button
-            key={f.value}
-            size="sm"
-            variant={filter === f.value ? "secondary" : "ghost"}
-            aria-pressed={filter === f.value}
-            onClick={() => router.replace(f.value === "all" ? pathname : `${pathname}?type=${f.value}`, { scroll: false })}
-          >
-            {f.label}
-          </Button>
-        ))}
-      </div>
+      <SegmentedControl
+        label="Filter reports"
+        options={filters}
+        value={filter}
+        onChange={(v) => router.replace(v === "all" ? pathname : `${pathname}?type=${v}`, { scroll: false })}
+      />
 
       {reports.isPending ? (
         <LoadingState label="Loading your reports…" />
       ) : reports.error ? (
         <ErrorState onRetry={() => reports.refetch()} retrying={reports.isFetching} />
       ) : !items.length ? (
-        <div className="rounded-lg border bg-card p-8 text-center">
-          <h2 className="font-semibold">No {filter === "all" ? "" : `${filter} `}reports yet</h2>
-          <p className="mt-1 text-muted-foreground">Reports you create will appear here so you can follow them.</p>
-        </div>
+        <EmptyState icon={ClipboardList} title={`No ${filter === "all" ? "" : `${filter} `}reports yet`}>
+          Reports you create will appear here so you can follow them.
+        </EmptyState>
       ) : (
         <>
-          <ul className="divide-y rounded-lg border bg-card">
+          <ul className="divide-y surface">
             {items.map((r) => {
               const href = r.status === "draft" ? wizardHref(r) : `/reports/${r.id}`;
               return (
                 <li key={r.id}>
-                  <Link href={href} className="flex items-center gap-4 p-4 hover:bg-muted/50 focus-visible:bg-muted/50">
+                  <Link href={href} className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/60 md:px-5">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium">{r.item_label}</span>
+                        <span className="font-semibold">{r.item_label}</span>
                         <Badge variant="outline">{r.report_type === "lost" ? "Lost" : "Found"}</Badge>
                         <ReportStatusBadge status={r.status} />
                       </div>

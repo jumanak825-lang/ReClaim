@@ -61,7 +61,7 @@ test("finder who keeps the item: full wizard to submitted report", async ({ page
   await page.getByRole("button", { name: "Submit report" }).click();
 
   await expect(page).toHaveURL(/\/reports\/[0-9a-f-]+$/);
-  await expect(page.getByText("Found report")).toBeVisible();
+  await expect(page.getByText("Found report", { exact: true })).toBeVisible();
   await expect(page.getByText("The finder has it")).toBeVisible();
   await expect(page.getByRole("region", { name: "Private details" })).toContainText("library card for J. Smith");
 });
