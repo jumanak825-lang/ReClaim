@@ -49,23 +49,30 @@ test("organisation overview shows cards, demo label and the priority queue", asy
   await expect(queue.getByRole("listitem").first()).toContainText("High priority");
 });
 
-test("location selector filters the priority queue and is kept in the URL", async ({ page }) => {
+test("location selector filters the summary and priority queue and is kept in the URL", async ({ page }) => {
   await signInAs(page, "reviewer@harbourview.example");
   const queue = page.getByRole("region", { name: "Priority queue" });
   await expect(queue.getByRole("listitem")).toHaveCount(3);
+  await expect(card(page, "Found inventory")).toContainText("3");
 
   await page.getByRole("combobox", { name: "Location" }).click();
   await page.getByRole("option", { name: "Terminal 1 Lost Property" }).click();
   await expect(page).toHaveURL(/\?location=/);
   await expect(queue.getByRole("listitem")).toHaveCount(1);
   await expect(queue.getByRole("listitem")).toContainText("Terminal 1 Lost Property");
+  await expect(page.getByText("At Terminal 1 Lost Property")).toBeVisible();
+  await expect(card(page, "Found inventory")).toContainText("1");
+  await expect(card(page, "Pending claims")).toContainText("0");
 
   await page.reload();
   await expect(queue.getByRole("listitem")).toHaveCount(1);
+  await expect(card(page, "Found inventory")).toContainText("1");
 
   await page.getByRole("combobox", { name: "Location" }).click();
   await page.getByRole("option", { name: "All locations" }).click();
   await expect(queue.getByRole("listitem")).toHaveCount(3);
+  await expect(page.getByText("Across all locations")).toBeVisible();
+  await expect(card(page, "Found inventory")).toContainText("3");
 });
 
 test("staff assigned to locations see 'All my locations'", async ({ page }) => {

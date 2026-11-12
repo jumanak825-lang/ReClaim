@@ -39,9 +39,19 @@ export default function OrganisationOverviewPage() {
   };
 
   const overview = useQuery({
-    queryKey: ["org", orgId, "overview"],
-    queryFn: () => unwrap(api.GET("/api/v1/organisations/{org_id}/overview", { params: { path: { org_id: orgId } } })),
+    queryKey: ["org", orgId, "overview", { locationId }],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/organisations/{org_id}/overview", {
+          params: { path: { org_id: orgId }, query: locationId ? { location_id: locationId } : {} },
+        }),
+      ),
   });
+  const scopeLabel = locationId
+    ? `At ${visible.find((l) => l.id === locationId)?.name}`
+    : org.location_ids.length
+      ? "Across all your locations"
+      : "Across all locations";
 
   return (
     <div className="grid gap-8">
@@ -74,7 +84,7 @@ export default function OrganisationOverviewPage() {
       ) : overview.error ? (
         <ErrorState onRetry={() => overview.refetch()} retrying={overview.isFetching} />
       ) : (
-        <OverviewCards data={overview.data} scoped={org.location_ids.length > 0} />
+        <OverviewCards data={overview.data} scopeLabel={scopeLabel} />
       )}
 
       <PriorityQueue orgId={orgId} orgSlug={org.organisation_slug} locationId={locationId} />
@@ -91,15 +101,14 @@ export default function OrganisationOverviewPage() {
   );
 }
 
-function OverviewCards({ data, scoped }: { data: Schemas["OrgOverviewOut"]; scoped: boolean }) {
+function OverviewCards({ data, scopeLabel }: { data: Schemas["OrgOverviewOut"]; scopeLabel: string }) {
   return (
     <section aria-labelledby="summary-heading" className="grid gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <h2 id="summary-heading" className="text-lg font-semibold">
           Summary
         </h2>
-        {/* The overview API has no location filter yet, so these cards always cover every location in scope. */}
-        <span className="text-sm text-muted-foreground">{scoped ? "Across all your locations" : "Across all locations"}</span>
+        <span className="text-sm text-muted-foreground">{scopeLabel}</span>
         {data.is_seeded_demo_data && <Badge variant="outline">Seeded demo data</Badge>}
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

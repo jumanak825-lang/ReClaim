@@ -710,7 +710,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Organisation overview cards */
+        /**
+         * Organisation overview cards
+         * @description All counts are limited to the caller's assigned locations. `location_id` narrows them to one location; a location outside the caller's scope returns 404. `recent_activity` is the caller's own notifications and is not filtered by location.
+         */
         get: operations["overview_api_v1_organisations__org_id__overview_get"];
         put?: never;
         post?: never;
@@ -6247,7 +6250,10 @@ export interface operations {
     };
     overview_api_v1_organisations__org_id__overview_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Limit every count to this location */
+                location_id?: string | null;
+            };
             header?: never;
             path: {
                 org_id: string;
